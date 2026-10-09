@@ -1,49 +1,16 @@
-# 🚀 Mission Control
+# React + Vite
 
-> Interactive space mission design game — educational simulator for aspiring space engineers
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
-## 🎯 About
+Currently, two official plugins are available:
 
-Mission Control is a space mission simulator where you design real missions — choosing spacecraft components, launch vehicles, and mission objectives while managing budget, mass, and power constraints.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## ✨ Features
+## React Compiler
 
-- 🎯 Choose your mission objective (Lunar, Mars, Earth Observation)
-- 🛰️ Design your spacecraft with real engineering constraints
-- 🚀 Select your launch vehicle based on payload capacity
-- 📊 Live budget & mass tracking
-- 🧠 Intelligent validation that explains design flaws
-- 💾 Save & compare multiple mission designs
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## 🛠️ Tech Stack
+## Expanding the Oxlint configuration
 
-- React 18
-- Vite
-- Tailwind CSS
-- Framer Motion
-- Chart.js
-
-## 📂 Project Structure
-
-src/
-├── components/    # Reusable UI components
-├── data/          # Mission, spacecraft, rocket data
-├── engine/        # Simulation logic & validation rules
-├── pages/         # Route pages
-└── utils/         # Helpers & constants
-
-## 🚀 Status
-
-🔨 **Under Development** — Currently building the core simulation engine.
-
-## 👤 Author
-
-**Mariam** — [@mariam2009m44-lab](https://github.com/mariam2009m44-lab)
-
-## 📜 License
-
-MIT License — see [LICENSE](LICENSE) for details.
-
----
-
-⭐ **Star this repo if you find it interesting!** ⭐
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.

@@ -1,0 +1,1 @@
+export default { content: ['./index.html', './src/**/*.{js,jsx}'], theme: { extend: { colors: { space: { 900: '#0a0e1a', 800: '#0f1729', 700: '#1a2340', accent: '#00d4ff', warning: '#ffb800', danger: '#ff3d5a', success: '#00ff88' } } } }, plugins: [] }
