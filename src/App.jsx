@@ -10,6 +10,7 @@ import Spacecraft from './components/Spacecraft';
 import MetricBar from './components/MetricBar';
 import AuthScreen from './components/AuthScreen';
 import MissionHistory from './components/MissionHistory';
+import LaunchSequence from './components/LaunchSequence';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -62,11 +63,13 @@ function GameScreen({ user, onLogout }) {
   const [result, setResult] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showLaunch, setShowLaunch] = useState(false);
 
   const design = { objectiveId, rocketId, componentIds };
   const metrics = calculateMetrics(design);
   const validation = validateDesign(metrics, design);
   const objective = objectives.find((o) => o.id === objectiveId);
+  const selectedRocket = rockets.find((r) => r.id === rocketId);
 
   const toggleComponent = (id) => {
     setComponentIds((prev) =>
@@ -75,8 +78,13 @@ function GameScreen({ user, onLogout }) {
   };
 
   const handleLaunch = () => {
+    setShowLaunch(true);
+  };
+
+  const finishLaunch = () => {
     const res = simulateLaunch(metrics, design);
     setResult(res);
+    setShowLaunch(false);
     setShowResult(true);
     saveMission({
       objective: objectiveId,
@@ -96,8 +104,8 @@ function GameScreen({ user, onLogout }) {
             <h1 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-space-accent to-cyan-300 bg-clip-text text-transparent">
               🚀 Mission Control
             </h1>
-            <div className="flex items-center gap-3">
-              <div className="text-xs text-gray-300">
+            <div className="flex items-center gap-2">
+              <div className="text-xs text-gray-300 hidden md:block">
                 👨‍🚀 <span className="text-space-accent font-bold">{user.username}</span>
               </div>
               <button
@@ -245,6 +253,16 @@ function GameScreen({ user, onLogout }) {
         </div>
 
         <AnimatePresence>
+          {showLaunch && (
+            <LaunchSequence
+              rocket={selectedRocket}
+              objective={objective}
+              onComplete={finishLaunch}
+            />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
           {showResult && result && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -292,7 +310,7 @@ function GameScreen({ user, onLogout }) {
         </AnimatePresence>
 
         <footer className="text-center text-gray-600 text-[10px] pb-4">
-          Educational simulator — v1.0.0
+          Educational simulator — v1.1.0
         </footer>
       </div>
     </>
