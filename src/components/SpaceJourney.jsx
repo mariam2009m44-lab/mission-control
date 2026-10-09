@@ -178,6 +178,14 @@ export default function SpaceJourney({ objective, rocket, onComplete }) {
         </div>
       </div>
 
+      {/* Exit button */}
+      <button
+        onClick={() => onComplete("PARTIAL")}
+        className="absolute top-3 right-3 z-30 px-3 py-1.5 bg-space-danger/20 border border-space-danger/50 text-space-danger rounded-lg text-xs font-bold"
+      >
+        ✕ Skip Journey
+      </button>
+
       {/* HUD - top */}
       <div className="absolute top-4 left-4 right-4 pointer-events-none">
         <div className="backdrop-blur-md bg-black/50 border border-white/20 rounded-2xl p-3">
