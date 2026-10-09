@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { objectives } from './data/objectives';
 import { components } from './data/spacecraft';
 import { rockets } from './data/rockets';
-import { spacecraftList, getSpacecraftType } from './data/spacecraftTypes';
-import { awardXP, xpProgress, calculateLevel, getUnlockedTypes } from './data/levelSystem';
 import { calculateMetrics, validateDesign, simulateLaunch } from './engine/simulator';
 import { getCurrentUser, logout, saveMission } from './utils/auth';
+import { spacecraftList } from './data/spacecraftTypes';
+import { calculateLevel, getUnlockedTypes, xpProgress } from './data/levelSystem';
 import Starfield from './components/Starfield';
 import RealisticSpacecraft from './components/RealisticSpacecraft';
 import MetricBar from './components/MetricBar';
@@ -14,526 +14,216 @@ import AuthScreen from './components/AuthScreen';
 import WelcomeScreen from './components/WelcomeScreen';
 import MissionHistory from './components/MissionHistory';
 import LaunchSequence from './components/LaunchSequence';
-import InfoCard from './components/InfoCard';
 import SpaceJourney from './components/SpaceJourney';
-import AchievementToast from './components/AchievementToast';
 import AchievementsPage from './components/AchievementsPage';
 import StatisticsPage from './components/StatisticsPage';
-import LevelUpToast from './components/LevelUpToast';
+import InfoCard from './components/InfoCard';
+import ExploreSpace from './components/ExploreSpace';
 import { ProIcons, ObjectiveIcons, RocketIcons, SpacecraftTypeIcons } from './components/ProIcons';
-import { achievements, checkNewAchievements } from './data/achievements';
-import { playClick, playSuccess, playFailure, initAudio, startAmbientMusic } from './utils/sounds';
+import { playClick, playSuccess, playFailure, initAudio, startAmbientMusic, stopAmbientMusic } from './utils/sounds';
 
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const u = getCurrentUser();
-    setUser(u);
-    setLoading(false);
-  }, []);
-
-  const handleLogout = () => {
-    logout();
-    setUser(null);
-  };
-
-  if (loading) {
-    return (
-      <>
-        <Starfield />
-        <div className="min-h-screen flex items-center justify-center text-white">
-          <motion.div
-            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="text-5xl"
-          >
-            🚀
-          </motion.div>
-        </div>
-      </>
-    );
-  }
-
-  if (!user) {
-    return (
-      <>
-        <Starfield />
-        <AuthScreen onAuth={setUser} />
-      </>
-    );
-  }
-
-  return <GameScreen user={user} onLogout={handleLogout} />;
+  useEffect(() => { setUser(getCurrentUser()); setLoading(false); }, []);
+  if (loading) return (<><Starfield /><div className="min-h-screen flex items-center justify-center text-white"><motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="text-5xl">🚀</motion.div></div></>);
+  if (!user) return (<><Starfield /><AuthScreen onAuth={setUser} /></>);
+  return <GameScreen user={user} onLogout={() => { logout(); setUser(null); }} />;
 }
 
 function GameScreen({ user, onLogout }) {
+  const [activeTab, setActiveTab] = useState('mission');
   const [objectiveId, setObjectiveId] = useState('lunar');
   const [rocketId, setRocketId] = useState('small');
   const [componentIds, setComponentIds] = useState(['solar_panel', 'camera']);
+  const [spacecraftTypeId, setSpacecraftTypeId] = useState('scout');
   const [result, setResult] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [showLaunch, setShowLaunch] = useState(false);
-  const [infoComponent, setInfoComponent] = useState(null);
-  const [showJourney, setShowJourney] = useState(false);
-  const [musicOn, setMusicOn] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showStats, setShowStats] = useState(false);
-  const [spacecraftTypeId, setSpacecraftTypeId] = useState('scout');
-  const [xp, setXp] = useState(() => {
-    try { return parseInt(localStorage.getItem('mc_xp') || '0'); }
-    catch { return 0; }
-  });
-  const [showLevelUp, setShowLevelUp] = useState(null);
-  const [newAchievement, setNewAchievement] = useState(null);
-  const [unlockedIds, setUnlockedIds] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('mc_achievements') || '[]');
-    } catch { return []; }
-  });
-  const [stats, setStats] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('mc_stats') || 'null') || {
-        totalMissions: 0,
-        successfulMissions: 0,
-        visitedPlanets: [],
-        usedRockets: [],
-        bestScience: 0,
-        bestBudget: null,
-        bestScore: 0,
-      };
-    } catch { return {
-      totalMissions: 0,
-      successfulMissions: 0,
-      visitedPlanets: [],
-      usedRockets: [],
-      bestScience: 0,
-      bestBudget: null,
-      bestScore: 0,
-    }; }
-  });
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [showExplore, setShowExplore] = useState(false);
+  const [showLaunch, setShowLaunch] = useState(false);
+  const [showJourney, setShowJourney] = useState(false);
+  const [infoComponent, setInfoComponent] = useState(null);
+  const [musicOn, setMusicOn] = useState(false);
+  const [xp, setXp] = useState(() => { try { return parseInt(localStorage.getItem('mc_xp') || '0'); } catch { return 0; } });
+  const [unlockedIds, setUnlockedIds] = useState(() => { try { return JSON.parse(localStorage.getItem('mc_achievements') || '[]'); } catch { return []; } });
 
   const design = { objectiveId, rocketId, componentIds };
   const metrics = calculateMetrics(design);
   const validation = validateDesign(metrics, design);
   const objective = objectives.find((o) => o.id === objectiveId);
   const selectedRocket = rockets.find((r) => r.id === rocketId);
+  const level = calculateLevel(xp);
+  const xpInfo = xpProgress(xp);
 
-  const toggleMusic = () => {
-    const next = !musicOn;
-    setMusicOn(next);
-    initAudio();
-    if (next) {
-      startAmbientMusic();
-    } else {
-      stopAmbientMusic();
-    }
-    playClick();
-  };
-
-  const finishWelcome = () => {
-    setShowWelcome(false);
-    localStorage.setItem('mc_welcome_seen', 'true');
-  };
-
-  const toggleComponent = (id) => {
-    setComponentIds((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
-  };
-
-  const handleLaunch = () => {
-    initAudio();
-    playClick();
-    setShowLaunch(true);
-  };
-
-  const finishLaunch = () => {
+  const toggleComponent = (id) => { playClick(); setComponentIds((prev) => prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]); };
+  const handleLaunch = () => { initAudio(); playClick(); setShowLaunch(true); };
+  const finishLaunch = () => { setShowLaunch(false); setShowJourney(true); };
+  const finishJourney = () => {
     const res = simulateLaunch(metrics, design);
-    setResult(res);
-    setShowLaunch(false);
-    setShowResult(true);
-    saveMission({
-      objective: objectiveId,
-      rocket: rocketId,
-      parts: componentIds,
-      score: res.score,
-      status: res.status,
-    });
-    updateStatsAndCheck(res, []);
-    const earnedXP = awardXP({ objective: objectiveId, score: res.score }, res.status);
-    const newXP = xp + earnedXP;
-    const oldLevel = calculateLevel(xp);
-    const newLevel = calculateLevel(newXP);
-    setXp(newXP);
-    localStorage.setItem('mc_xp', newXP.toString());
-    if (newLevel > oldLevel) {
-      setShowLevelUp(newLevel);
-      setTimeout(() => setShowLevelUp(null), 4500);
-    }
+    setResult(res); setShowJourney(false); setShowResult(true);
+    saveMission({ objective: objectiveId, rocket: rocketId, parts: componentIds, score: res.score, status: res.status });
+    setTimeout(() => { if (res.status === 'SUCCESS') playSuccess(); else playFailure(); }, 400);
   };
+  const toggleMusic = () => { const n = !musicOn; setMusicOn(n); initAudio(); if (n) startAmbientMusic(); else stopAmbientMusic(); playClick(); };
+
+  const tabs = [
+    { id: 'mission', icon: '🎯', label: 'Mission' },
+    { id: 'build', icon: '🛰️', label: 'Build' },
+    { id: 'launch', icon: '🚀', label: 'Launch' },
+    { id: 'explore', icon: '🌌', label: 'Explore' },
+  ];
 
   return (
     <>
       <Starfield />
-      <div className="min-h-screen text-white relative overflow-hidden">
-        <div className="backdrop-blur-md bg-black/30 border-b border-white/10 px-4 py-3">
-          <div className="max-w-7xl mx-auto mb-2 flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-space-accent/20 border border-space-accent/40 rounded-full px-3 py-0.5">
-              <span className="text-[10px] font-bold text-space-accent">LVL {calculateLevel(xp)}</span>
-              <div className="w-16 h-1.5 bg-black/40 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-space-accent to-cyan-300 transition-all"
-                  style={{ width: xpProgress(xp).progress + '%' }}
-                />
-              </div>
-              <span className="text-[9px] text-gray-400">{xp} XP</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between max-w-7xl mx-auto">
-            <h1 
-              onDoubleClick={() => setShowWelcome(true)}
-              className="text-lg md:text-2xl font-bold bg-gradient-to-r from-space-accent to-cyan-300 bg-clip-text text-transparent cursor-pointer">
-              🚀 Mission Control
-            </h1>
+      <div className="min-h-screen text-white relative overflow-hidden flex flex-col">
+        <div className="backdrop-blur-md bg-black/40 border-b border-white/10 px-3 py-2 z-10">
+          <div className="max-w-2xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="text-xs text-gray-300 hidden md:block">
-                👨‍🚀 <span className="text-space-accent font-bold">{user.username}</span>
+              <span className="text-lg">🚀</span>
+              <div>
+                <div className="text-xs font-bold text-space-accent">Mission Control</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[8px] px-1.5 py-0.5 bg-space-accent/20 border border-space-accent/40 rounded text-space-accent font-bold">LVL {level}</span>
+                  <div className="w-12 h-1 bg-black/40 rounded-full overflow-hidden"><div className="h-full bg-space-accent" style={{ width: xpInfo.progress + '%' }} /></div>
+                </div>
               </div>
-                            <button
-                onClick={toggleMusic}
-                className={`text-xs px-2 md:px-3 py-1 border rounded-lg ${
-                  musicOn
-                    ? 'bg-space-success/20 border-space-success/50 text-space-success'
-                    : 'bg-white/5 border-white/10 text-gray-400'
-                }`}
-              >
-                {musicOn ? '🎵' : '🔇'}
-              </button>
-                            <button
-                onClick={() => setShowStats(true)}
-                className="text-xs px-2 md:px-3 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg hover:bg-purple-500/30"
-              >
-                📊
-              </button>
-              <button onClick={() => setShowAchievements(true)}
-                className="text-xs px-2 md:px-3 py-1 bg-space-warning/20 border border-space-warning/50 text-space-warning rounded-lg hover:bg-space-warning/30"
-              >
-                🏆 {unlockedIds.length}
-              </button>
-              <button
-                onClick={() => setShowWelcome(true)}
-                className="text-xs px-2 md:px-3 py-1 bg-blue-500/20 border border-blue-400/50 text-blue-300 rounded-lg hover:bg-blue-500/30"
-                title="Show Tutorial"
-              >
-                ❓
-              </button>
-              <button
-                onClick={() => setShowHistory(true)}
-                className="text-xs px-2 md:px-3 py-1 bg-space-accent/20 border border-space-accent/50 text-space-accent rounded-lg hover:bg-space-accent/30"
-              >
-                📜 Log
-              </button>
-              <button
-                onClick={onLogout}
-                className="text-xs px-3 py-1 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10"
-              >
-                Exit
-              </button>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button onClick={toggleMusic} className={'text-[10px] px-2 py-1 rounded-lg border ' + (musicOn ? 'bg-space-success/20 border-space-success/50 text-space-success' : 'bg-white/5 border-white/10 text-gray-400')}>{musicOn ? '🎵' : '🔇'}</button>
+              <button onClick={() => { playClick(); setShowStats(true); }} className="text-[10px] px-2 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg">📊</button>
+              <button onClick={() => { playClick(); setShowAchievements(true); }} className="text-[10px] px-2 py-1 bg-space-warning/20 border border-space-warning/50 text-space-warning rounded-lg">🏆</button>
+              <button onClick={() => { playClick(); setShowHistory(true); }} className="text-[10px] px-2 py-1 bg-space-accent/20 border border-space-accent/50 text-space-accent rounded-lg">📜</button>
+              <button onClick={onLogout} className="text-[10px] px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-gray-400">Exit</button>
             </div>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-2 md:px-4 py-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <div className="lg:col-span-2 order-2 lg:order-1">
-            <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-3">
-              <h3 className="text-xs text-gray-400 mb-2 font-bold">🎯 MISSION</h3>
-              <div className="space-y-2">
-                {objectives.map((obj) => (
-                  <motion.button
-                    key={obj.id}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      playClick();
-                      setObjectiveId(obj.id);
-                    }}
-                    className={`w-full p-2 rounded-xl text-left text-xs border transition-all ${
-                      objectiveId === obj.id
-                        ? 'bg-space-accent/20 border-space-accent text-white'
-                        : 'bg-white/5 border-white/10 text-gray-400 hover:border-space-accent'
-                    }`}
-                  >
-                    <div className="flex justify-center mb-1 text-space-accent">{(() => { const Icon = ObjectiveIcons[obj.id]; return Icon ? <Icon size={28} /> : obj.icon; })()}</div>
-                    <div className="font-bold mt-1">{obj.name}</div>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-7 order-1 lg:order-2">
-            <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-4 relative min-h-[400px] md:min-h-[500px] flex flex-col">
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <div className="text-center">
-                  <div className="text-[10px] text-gray-500">MASS</div>
-                  <div className="text-sm font-bold text-space-accent">{metrics.mass}kg</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-[10px] text-gray-500">BUDGET</div>
-                  <div className={`text-sm font-bold ${metrics.cost > 100 ? 'text-space-danger' : 'text-space-warning'}`}>
-                    ${metrics.cost}M
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-1 flex items-center justify-center">
-                <RealisticSpacecraft type={spacecraftTypeId} components={componentIds} />
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleLaunch}
-                disabled={!rocketId}
-                className="mt-3 w-full py-3 bg-gradient-to-r from-space-accent via-cyan-300 to-space-accent text-space-900 rounded-xl font-bold text-lg shadow-lg shadow-space-accent/40"
-              >
-                🚀 LAUNCH MISSION
-              </motion.button>
-            </div>
-
-            <div className="mt-3 backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-3">
-              <h3 className="text-xs text-gray-400 mb-2 font-bold">🛰️ SPACECRAFT TYPE</h3>
-              <div className="grid grid-cols-3 gap-2">
-                {spacecraftList.map((st) => {
-                  const level = calculateLevel(xp);
-                  const unlocked = getUnlockedTypes(level).includes(st.id);
-                  const selected = spacecraftTypeId === st.id;
-                  return (
-                    <button
-                      key={st.id}
-                      onClick={() => {
-                        if (!unlocked) return;
-                        setSpacecraftTypeId(st.id);
-                        playClick();
-                      }}
-                      disabled={!unlocked}
-                      className={'p-2 rounded-xl border transition-all text-center ' +
-                        (selected
-                          ? 'bg-space-accent/30 border-space-accent'
-                          : unlocked
-                          ? 'bg-white/5 border-white/10 hover:border-space-accent/50'
-                          : 'bg-black/40 border-white/5 opacity-40')
-                      }
-                    >
-                      <div className="flex justify-center text-space-accent">{unlocked ? (() => { const Icon = SpacecraftTypeIcons[st.id]; return Icon ? <Icon size={32} /> : st.icon; })() : <span className="text-3xl opacity-50">🔒</span>}</div>
-                      <div className="text-[9px] text-gray-300 mt-1">{st.name}</div>
-                      <div className="text-[8px] text-gray-500 mt-0.5">{st.baseStats.baseCost}M</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="mt-3 backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-3">
-              <h3 className="text-xs text-gray-400 mb-2 font-bold">🔧 ADD PARTS</h3>
-              <div className="grid grid-cols-5 gap-2">
-                {Object.values(components).map((c) => {
-                  const selected = componentIds.includes(c.id);
-                  return (
-                    <div
-                      key={c.id}
-                      className={`relative p-2 rounded-xl border transition-all text-center ${
-                        selected
-                          ? 'bg-space-accent/30 border-space-accent'
-                          : 'bg-white/5 border-white/10 hover:border-space-accent/50'
-                      }`}
-                    >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setInfoComponent(c.id);
-                        }}
-                        className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-space-accent/40 text-space-accent text-[8px] font-bold flex items-center justify-center hover:bg-space-accent hover:text-space-900"
-                      >
-                        i
-                      </button>
-                      <div
-                        onClick={() => {
-                          playClick();
-                          toggleComponent(c.id);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        <div className="text-2xl text-space-accent flex justify-center">{(() => { const Icon = ProIcons[c.id]; return Icon ? <Icon size={28} /> : c.icon; })()}</div>
-                        <div className="text-[9px] text-gray-300 mt-1 leading-tight">
-                          {c.name.split(' ')[0]}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-3 order-3 space-y-3">
-            <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-3">
-              <h3 className="text-xs text-gray-400 mb-2 font-bold">🚀 LAUNCHER</h3>
-              <div className="space-y-2">
-                {rockets.map((r) => (
-                  <motion.button
-                    key={r.id}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      playClick();
-                      setRocketId(r.id);
-                    }}
-                    className={`w-full p-2 rounded-xl border text-left transition-all ${
-                      rocketId === r.id
-                        ? 'bg-space-accent/20 border-space-accent'
-                        : 'bg-white/5 border-white/10 hover:border-space-accent'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl text-space-accent">{(() => { const Icon = RocketIcons[r.id]; return Icon ? <Icon size={24} /> : r.icon; })()}</span>
-                      <div className="flex-1">
-                        <div className="text-xs font-bold">{r.name}</div>
-                        <div className="text-[10px] text-gray-500">
-                          {r.maxPayload}kg · ${r.cost}M
-                        </div>
-                      </div>
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-
-            <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-3">
-              <h3 className="text-xs text-gray-400 mb-3 font-bold">📊 STATUS</h3>
-              <div className="space-y-3">
-                <MetricBar label="Mass" value={metrics.mass} max={500} unit="kg" color={metrics.mass > (metrics.rocket?.maxPayload || 500) ? 'danger' : 'accent'} icon="⚖️" />
-                <MetricBar label="Budget" value={metrics.cost} max={100} unit="M$" color={metrics.cost > 100 ? 'danger' : 'warning'} icon="💰" />
-                <MetricBar label="Power" value={Math.max(metrics.power, 0)} max={500} unit="W" color={metrics.power < 0 ? 'danger' : 'success'} icon="⚡" />
-                <MetricBar label="Science" value={metrics.science} max={100} color="accent" icon="🔬" />
-              </div>
-
-              {validation.errors.length > 0 && (
-                <div className="mt-3 p-2 rounded-lg bg-space-danger/10 border border-space-danger/30 text-[10px] text-space-danger space-y-1">
-                  {validation.errors.map((e, i) => <div key={i}>⚠ {e}</div>)}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <AnimatePresence>
-          {showLaunch && (
-            <LaunchSequence
-              rocket={selectedRocket} design={design}
-              objective={objective}
-              onComplete={(events) => finishLaunch(events)}
-            />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showResult && result && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4"
-              onClick={() => setShowResult(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.8, y: 30 }}
-                animate={{ scale: 1, y: 0 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-space-800/95 border border-white/20 rounded-3xl p-6 max-w-md w-full text-center"
-              >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: 'spring' }}
-                  className="text-7xl mb-3"
-                >
-                  {result.status === 'SUCCESS' ? '🎉' : result.status === 'PARTIAL' ? '📊' : '❌'}
+        <div className="flex-1 overflow-y-auto pb-24 z-10">
+          <div className="max-w-2xl mx-auto px-3 py-4">
+            <AnimatePresence mode="wait">
+              {activeTab === 'mission' && (
+                <motion.div key="m" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-3">
+                  <div className="text-center mb-4"><h2 className="text-xl font-bold text-space-accent">🎯 Choose Your Mission</h2><p className="text-xs text-gray-400">Where do you want to go?</p></div>
+                  {objectives.map((obj) => {
+                    const Icon = ObjectiveIcons[obj.id];
+                    const selected = objectiveId === obj.id;
+                    return (
+                      <motion.button key={obj.id} whileTap={{ scale: 0.98 }} onClick={() => { playClick(); setObjectiveId(obj.id); }} className={'w-full p-4 rounded-2xl border-2 text-left flex items-center gap-4 ' + (selected ? 'bg-space-accent/20 border-space-accent' : 'bg-white/5 border-white/10')}>
+                        <div className={'w-14 h-14 rounded-xl flex items-center justify-center ' + (selected ? 'bg-space-accent/30' : 'bg-white/5')}>{Icon && <Icon size={32} className={selected ? 'text-space-accent' : 'text-gray-400'} />}</div>
+                        <div className="flex-1"><div className={'text-base font-bold ' + (selected ? 'text-space-accent' : 'text-white')}>{obj.name}</div><div className="text-[11px] text-gray-400 mt-0.5">{obj.description}</div></div>
+                        {selected && <div className="text-space-accent text-2xl">✓</div>}
+                      </motion.button>
+                    );
+                  })}
                 </motion.div>
-                <h2 className="text-2xl font-bold text-space-accent mb-2">{result.message}</h2>
-                <p className="text-gray-400 text-sm mb-4">Score: {result.score}</p>
+              )}
+              {activeTab === 'build' && (
+                <motion.div key="b" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-3">
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-3"><div className="grid grid-cols-4 gap-2 text-center text-[10px]">
+                    <div><div className="text-gray-500">MASS</div><div className="text-sm font-bold text-space-accent">{metrics.mass}kg</div></div>
+                    <div><div className="text-gray-500">BUDGET</div><div className="text-sm font-bold text-space-warning">${metrics.cost}M</div></div>
+                    <div><div className="text-gray-500">POWER</div><div className="text-sm font-bold text-space-success">{metrics.power}W</div></div>
+                    <div><div className="text-gray-500">SCIENCE</div><div className="text-sm font-bold text-space-accent">{metrics.science}</div></div>
+                  </div></div>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4" style={{ minHeight: 280 }}><RealisticSpacecraft type={spacecraftTypeId} components={componentIds} /></div>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
+                    <div className="text-[10px] text-gray-400 font-bold mb-2">SPACECRAFT TYPE</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {spacecraftList.map((st) => {
+                        const Icon = SpacecraftTypeIcons[st.id];
+                        const unlocked = getUnlockedTypes(level).includes(st.id);
+                        const selected = spacecraftTypeId === st.id;
+                        return (
+                          <button key={st.id} onClick={() => { if (unlocked) { playClick(); setSpacecraftTypeId(st.id); } }} disabled={!unlocked} className={'p-2 rounded-xl border text-center ' + (selected ? 'bg-space-accent/30 border-space-accent' : unlocked ? 'bg-white/5 border-white/10' : 'opacity-40')}>
+                            <div className="flex justify-center">{unlocked && Icon ? <Icon size={26} className={selected ? 'text-space-accent' : 'text-gray-400'} /> : <span className="text-2xl">🔒</span>}</div>
+                            <div className="text-[9px] mt-1">{st.name}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
+                    <div className="text-[10px] text-gray-400 font-bold mb-2">ADD PARTS · {componentIds.length} selected</div>
+                    <div className="grid grid-cols-5 gap-2">
+                      {Object.values(components).map((c) => {
+                        const Icon = ProIcons[c.id];
+                        const selected = componentIds.includes(c.id);
+                        return (
+                          <div key={c.id} className={'relative p-2 rounded-xl border text-center cursor-pointer ' + (selected ? 'bg-space-accent/30 border-space-accent' : 'bg-white/5 border-white/10')}>
+                            <button onClick={(e) => { e.stopPropagation(); setInfoComponent(c.id); }} className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-space-accent/40 text-space-accent text-[8px] font-bold">i</button>
+                            <div onClick={() => toggleComponent(c.id)}>
+                              <div className="flex justify-center">{Icon ? <Icon size={22} className={selected ? 'text-space-accent' : 'text-gray-400'} /> : <span className="text-xl">{c.icon}</span>}</div>
+                              <div className="text-[8px] text-gray-400 mt-1">{c.name.split(' ')[0]}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {validation.errors.length > 0 && (<div className="p-3 rounded-xl bg-space-danger/10 border border-space-danger/30 text-[10px] text-space-danger space-y-1">{validation.errors.map((e, i) => <div key={i}>⚠ {e}</div>)}</div>)}
+                </motion.div>
+              )}
+              {activeTab === 'launch' && (
+                <motion.div key="l" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-3">
+                  <div className="text-center mb-4"><h2 className="text-xl font-bold text-space-warning">🚀 Select Launcher</h2><p className="text-xs text-gray-400">Choose a rocket for your spacecraft</p></div>
+                  {rockets.map((r) => {
+                    const Icon = RocketIcons[r.id];
+                    const selected = rocketId === r.id;
+                    return (
+                      <motion.button key={r.id} whileTap={{ scale: 0.98 }} onClick={() => { playClick(); setRocketId(r.id); }} className={'w-full p-4 rounded-2xl border-2 text-left flex items-center gap-4 ' + (selected ? 'bg-space-warning/20 border-space-warning' : 'bg-white/5 border-white/10')}>
+                        <div className={'w-14 h-14 rounded-xl flex items-center justify-center ' + (selected ? 'bg-space-warning/30' : 'bg-white/5')}>{Icon && <Icon size={32} className={selected ? 'text-space-warning' : 'text-gray-400'} />}</div>
+                        <div className="flex-1"><div className={'text-base font-bold ' + (selected ? 'text-space-warning' : 'text-white')}>{r.name}</div><div className="text-[11px] text-gray-400">{r.maxPayload}kg · ${r.cost}M</div></div>
+                        {selected && <div className="text-space-warning text-2xl">✓</div>}
+                      </motion.button>
+                    );
+                  })}
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
+                    <MetricBar label="Mass" value={metrics.mass} max={selectedRocket?.maxPayload || 500} unit="kg" color={metrics.mass > (selectedRocket?.maxPayload || 500) ? 'danger' : 'accent'} icon="⚖️" />
+                    <MetricBar label="Budget" value={metrics.cost} max={100} unit="M$" color={metrics.cost > 100 ? 'danger' : 'warning'} icon="💰" />
+                    <MetricBar label="Power" value={Math.max(metrics.power, 0)} max={500} unit="W" color={metrics.power < 0 ? 'danger' : 'success'} icon="⚡" />
+                  </div>
+                  <motion.button whileTap={{ scale: 0.97 }} onClick={handleLaunch} disabled={!validation.isValid} className={'w-full py-4 rounded-2xl font-bold text-lg shadow-2xl ' + (validation.isValid ? 'bg-gradient-to-r from-space-accent to-cyan-300 text-space-900' : 'bg-gray-700 text-gray-500')}>
+                    {validation.isValid ? '🚀 LAUNCH MISSION' : '⚠ Fix errors first'}
+                  </motion.button>
+                </motion.div>
+              )}
+              {activeTab === 'explore' && (
+                <motion.div key="e" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-3">
+                  <div className="text-center mb-4"><h2 className="text-xl font-bold text-space-accent">🌌 Explore Space</h2><p className="text-xs text-gray-400">Real NASA data & 3D solar system</p></div>
+                  <motion.button whileTap={{ scale: 0.98 }} onClick={() => { playClick(); setShowExplore(true); }} className="w-full p-5 rounded-2xl border-2 border-space-accent/50 bg-space-accent/10 text-left">
+                    <div className="flex items-center gap-4"><div className="text-5xl">🛰️</div><div className="flex-1"><div className="text-lg font-bold text-space-accent">NASA's Eyes</div><div className="text-xs text-gray-300 mt-1">Explore planets and 170+ spacecraft in real 3D</div><div className="text-[10px] text-space-accent mt-2 font-bold">TAP TO EXPLORE →</div></div></div>
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
 
-                <div className="bg-white/5 rounded-xl p-3 text-left text-xs space-y-1 mb-4">
-                  {result.details.map((d, i) => (
-                    <div key={i} className="text-gray-300">• {d}</div>
-                  ))}
-                </div>
+        <div className="fixed bottom-0 left-0 right-0 z-20 backdrop-blur-xl bg-black/70 border-t border-white/10">
+          <div className="max-w-2xl mx-auto grid grid-cols-4">
+            {tabs.map((tab) => (
+              <button key={tab.id} onClick={() => { playClick(); setActiveTab(tab.id); }} className={'py-3 flex flex-col items-center gap-1 ' + (activeTab === tab.id ? 'text-space-accent' : 'text-gray-500')}>
+                <span className="text-2xl">{tab.icon}</span>
+                <span className="text-[10px] font-bold">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-                <button
-                  onClick={() => setShowResult(false)}
-                  className="w-full py-3 bg-gradient-to-r from-space-accent to-cyan-400 text-space-900 rounded-xl font-bold"
-                >
-                  🔄 PLAY AGAIN
-                </button>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showHistory && <MissionHistory onClose={() => setShowHistory(false)} />}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showStats && (
-            <StatisticsPage onClose={() => setShowStats(false)} />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showAchievements && (
-            <AchievementsPage
-              unlockedIds={unlockedIds}
-              onClose={() => setShowAchievements(false)}
-            />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {newAchievement && (
-            <AchievementToast
-              achievement={newAchievement}
-              onClose={() => setNewAchievement(null)}
-            />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showLevelUp && (
-            <LevelUpToast
-              level={showLevelUp}
-              onClose={() => setShowLevelUp(null)}
-            />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {infoComponent && (
-            <InfoCard componentId={infoComponent} onClose={() => setInfoComponent(null)} />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showWelcome && (
-            <WelcomeScreen username={user.username} onStart={finishWelcome} />
-          )}
-        </AnimatePresence>
-
-        <footer className="text-center text-gray-600 text-[10px] pb-4">
-          Educational simulator — v1.1.0
-        </footer>
+        <AnimatePresence>{showLaunch && <LaunchSequence rocket={selectedRocket} objective={objective} design={design} onComplete={finishLaunch} />}</AnimatePresence>
+        <AnimatePresence>{showJourney && <SpaceJourney objective={objective} rocket={selectedRocket} onComplete={finishJourney} />}</AnimatePresence>
+        <AnimatePresence>{showResult && result && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={() => setShowResult(false)}><motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} onClick={(e) => e.stopPropagation()} className="bg-space-800/95 border border-white/20 rounded-3xl p-6 max-w-md w-full text-center"><div className="text-7xl mb-3">{result.status === 'SUCCESS' ? '🎉' : result.status === 'PARTIAL' ? '📊' : '❌'}</div><h2 className="text-2xl font-bold text-space-accent mb-2">{result.message}</h2><p className="text-gray-400 text-sm mb-4">Score: {result.score}</p><button onClick={() => setShowResult(false)} className="w-full py-3 bg-space-accent text-space-900 rounded-xl font-bold">PLAY AGAIN</button></motion.div></motion.div>)}</AnimatePresence>
+        <AnimatePresence>{showHistory && <MissionHistory onClose={() => setShowHistory(false)} />}</AnimatePresence>
+        <AnimatePresence>{showAchievements && <AchievementsPage unlockedIds={unlockedIds} onClose={() => setShowAchievements(false)} />}</AnimatePresence>
+        <AnimatePresence>{showStats && <StatisticsPage onClose={() => setShowStats(false)} />}</AnimatePresence>
+        <AnimatePresence>{showWelcome && <WelcomeScreen username={user.username} onStart={() => setShowWelcome(false)} />}</AnimatePresence>
+        <AnimatePresence>{showExplore && <ExploreSpace onClose={() => setShowExplore(false)} />}</AnimatePresence>
+        <AnimatePresence>{infoComponent && <InfoCard componentId={infoComponent} onClose={() => setInfoComponent(null)} />}</AnimatePresence>
       </div>
     </>
   );
