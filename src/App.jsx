@@ -14,6 +14,7 @@ import AuthScreen from './components/AuthScreen';
 import WelcomeScreen from './components/WelcomeScreen';
 import MissionHistory from './components/MissionHistory';
 import Leaderboard from './components/Leaderboard';
+import AIAssistant from './components/AIAssistant';
 import LaunchSequence from './components/LaunchSequence';
 import SpaceJourney from './components/SpaceJourney';
 import AchievementsPage from './components/AchievementsPage';
@@ -42,6 +43,7 @@ function GameScreen({ user, onLogout }) {
   const [showResult, setShowResult] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showAI, setShowAI] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
@@ -100,6 +102,7 @@ function GameScreen({ user, onLogout }) {
               <button onClick={() => { playClick(); setShowStats(true); }} className="text-[10px] px-2 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg">📊</button>
               <button onClick={() => { playClick(); setShowAchievements(true); }} className="text-[10px] px-2 py-1 bg-space-warning/20 border border-space-warning/50 text-space-warning rounded-lg">🏆</button>
               <button onClick={() => { playClick(); setShowLeaderboard(true); }} className="text-[10px] px-2 py-1 bg-yellow-500/20 border border-yellow-400/50 text-yellow-300 rounded-lg">🏆</button>
+              <button onClick={() => { playClick(); setShowAI(true); }} className="text-[10px] px-2 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg">🤖</button>
               <button onClick={() => { playClick(); setShowHistory(true); }} className="text-[10px] px-2 py-1 bg-space-accent/20 border border-space-accent/50 text-space-accent rounded-lg">📜</button>
               <button onClick={onLogout} className="text-[10px] px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-gray-400">Exit</button>
             </div>
@@ -223,6 +226,7 @@ function GameScreen({ user, onLogout }) {
         <AnimatePresence>{showResult && result && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={() => setShowResult(false)}><motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} onClick={(e) => e.stopPropagation()} className="bg-space-800/95 border border-white/20 rounded-3xl p-6 max-w-md w-full text-center"><div className="text-7xl mb-3">{result.status === 'SUCCESS' ? '🎉' : result.status === 'PARTIAL' ? '📊' : '❌'}</div><h2 className="text-2xl font-bold text-space-accent mb-2">{result.message}</h2><p className="text-gray-400 text-sm mb-4">Score: {result.score}</p><button onClick={() => setShowResult(false)} className="w-full py-3 bg-space-accent text-space-900 rounded-xl font-bold">PLAY AGAIN</button></motion.div></motion.div>)}</AnimatePresence>
         <AnimatePresence>{showHistory && <MissionHistory onClose={() => setShowHistory(false)} />}</AnimatePresence>
         <AnimatePresence>{showLeaderboard && <Leaderboard onClose={() => setShowLeaderboard(false)} currentUser={user.username} />}</AnimatePresence>
+        <AnimatePresence>{showAI && <AIAssistant design={design} onClose={() => setShowAI(false)} />}</AnimatePresence>
         <AnimatePresence>{showAchievements && <AchievementsPage unlockedIds={unlockedIds} onClose={() => setShowAchievements(false)} />}</AnimatePresence>
         <AnimatePresence>{showStats && <StatisticsPage onClose={() => setShowStats(false)} />}</AnimatePresence>
         <AnimatePresence>{showWelcome && <WelcomeScreen username={user.username} onStart={() => setShowWelcome(false)} />}</AnimatePresence>
