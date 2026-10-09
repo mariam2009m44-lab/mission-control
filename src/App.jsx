@@ -69,12 +69,25 @@ function GameScreen({ user, onLogout }) {
   const [showLaunch, setShowLaunch] = useState(false);
   const [infoComponent, setInfoComponent] = useState(null);
   const [showJourney, setShowJourney] = useState(false);
+  const [musicOn, setMusicOn] = useState(false);
 
   const design = { objectiveId, rocketId, componentIds };
   const metrics = calculateMetrics(design);
   const validation = validateDesign(metrics, design);
   const objective = objectives.find((o) => o.id === objectiveId);
   const selectedRocket = rockets.find((r) => r.id === rocketId);
+
+  const toggleMusic = () => {
+    const next = !musicOn;
+    setMusicOn(next);
+    initAudio();
+    if (next) {
+      startAmbientMusic();
+    } else {
+      stopAmbientMusic();
+    }
+    playClick();
+  };
 
   const toggleComponent = (id) => {
     setComponentIds((prev) =>
@@ -115,6 +128,16 @@ function GameScreen({ user, onLogout }) {
               <div className="text-xs text-gray-300 hidden md:block">
                 👨‍🚀 <span className="text-space-accent font-bold">{user.username}</span>
               </div>
+                            <button
+                onClick={toggleMusic}
+                className={`text-xs px-2 md:px-3 py-1 border rounded-lg ${
+                  musicOn
+                    ? 'bg-space-success/20 border-space-success/50 text-space-success'
+                    : 'bg-white/5 border-white/10 text-gray-400'
+                }`}
+              >
+                {musicOn ? '🎵' : '🔇'}
+              </button>
               <button
                 onClick={() => setShowHistory(true)}
                 className="text-xs px-2 md:px-3 py-1 bg-space-accent/20 border border-space-accent/50 text-space-accent rounded-lg hover:bg-space-accent/30"
