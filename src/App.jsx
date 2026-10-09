@@ -15,6 +15,7 @@ import InfoCard from './components/InfoCard';
 import SpaceJourney from './components/SpaceJourney';
 import AchievementToast from './components/AchievementToast';
 import AchievementsPage from './components/AchievementsPage';
+import StatisticsPage from './components/StatisticsPage';
 import { achievements, checkNewAchievements } from './data/achievements';
 import { playClick, playSuccess, playFailure, initAudio, startAmbientMusic } from './utils/sounds';
 
@@ -74,6 +75,7 @@ function GameScreen({ user, onLogout }) {
   const [showJourney, setShowJourney] = useState(false);
   const [musicOn, setMusicOn] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [newAchievement, setNewAchievement] = useState(null);
   const [unlockedIds, setUnlockedIds] = useState(() => {
     try {
@@ -171,7 +173,12 @@ function GameScreen({ user, onLogout }) {
                 {musicOn ? '🎵' : '🔇'}
               </button>
                             <button
-                onClick={() => setShowAchievements(true)}
+                onClick={() => setShowStats(true)}
+                className="text-xs px-2 md:px-3 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg hover:bg-purple-500/30"
+              >
+                📊
+              </button>
+              <button onClick={() => setShowAchievements(true)}
                 className="text-xs px-2 md:px-3 py-1 bg-space-warning/20 border border-space-warning/50 text-space-warning rounded-lg hover:bg-space-warning/30"
               >
                 🏆 {unlockedIds.length}
@@ -396,6 +403,12 @@ function GameScreen({ user, onLogout }) {
 
         <AnimatePresence>
           {showHistory && <MissionHistory onClose={() => setShowHistory(false)} />}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showStats && (
+            <StatisticsPage onClose={() => setShowStats(false)} />
+          )}
         </AnimatePresence>
 
         <AnimatePresence>
