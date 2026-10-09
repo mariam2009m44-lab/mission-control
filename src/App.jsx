@@ -9,6 +9,7 @@ import Starfield from './components/Starfield';
 import Spacecraft from './components/Spacecraft';
 import MetricBar from './components/MetricBar';
 import AuthScreen from './components/AuthScreen';
+import MissionHistory from './components/MissionHistory';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -60,6 +61,7 @@ function GameScreen({ user, onLogout }) {
   const [componentIds, setComponentIds] = useState(['solar_panel', 'camera']);
   const [result, setResult] = useState(null);
   const [showResult, setShowResult] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const design = { objectiveId, rocketId, componentIds };
   const metrics = calculateMetrics(design);
@@ -98,6 +100,12 @@ function GameScreen({ user, onLogout }) {
               <div className="text-xs text-gray-300">
                 👨‍🚀 <span className="text-space-accent font-bold">{user.username}</span>
               </div>
+              <button
+                onClick={() => setShowHistory(true)}
+                className="text-xs px-2 md:px-3 py-1 bg-space-accent/20 border border-space-accent/50 text-space-accent rounded-lg hover:bg-space-accent/30"
+              >
+                📜 Log
+              </button>
               <button
                 onClick={onLogout}
                 className="text-xs px-3 py-1 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10"
@@ -277,6 +285,10 @@ function GameScreen({ user, onLogout }) {
               </motion.div>
             </motion.div>
           )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showHistory && <MissionHistory onClose={() => setShowHistory(false)} />}
         </AnimatePresence>
 
         <footer className="text-center text-gray-600 text-[10px] pb-4">
