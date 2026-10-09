@@ -171,11 +171,11 @@ function GameScreen({ user, onLogout }) {
                         const Icon = ProIcons[c.id];
                         const selected = componentIds.includes(c.id);
                         return (
-                          <div key={c.id} className={'relative p-2 rounded-xl border text-center cursor-pointer ' + (selected ? 'bg-space-accent/30 border-space-accent' : 'bg-white/5 border-white/10')}>
-                            <button onClick={(e) => { e.stopPropagation(); setInfoComponent(c.id); }} className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-space-accent/40 text-space-accent text-[8px] font-bold">i</button>
+                          <div key={c.id} className={'relative p-2 rounded-xl border-2 text-center cursor-pointer transition-all ' + (selected ? 'bg-space-accent/20 border-space-accent shadow-lg shadow-space-accent/30' : 'bg-white/5 border-white/10 hover:border-space-accent/40')}>
+                            <button onClick={(e) => { e.stopPropagation(); setInfoComponent(c.id); }} className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-space-accent/40 text-space-accent text-[8px] font-bold leading-none flex items-center justify-center">i</button>
                             <div onClick={() => toggleComponent(c.id)}>
-                              <div className="flex justify-center">{Icon ? <Icon size={22} className={selected ? 'text-space-accent' : 'text-gray-400'} /> : <span className="text-xl">{c.icon}</span>}</div>
-                              <div className="text-[8px] text-gray-400 mt-1">{c.name.split(' ')[0]}</div>
+                              <div className={`flex justify-center transition-all ${selected ? 'drop-shadow-[0_0_8px_rgba(0,212,255,0.8)]' : ''}`}>{Icon ? <Icon size={26} className={selected ? 'text-space-accent' : 'text-gray-300'} /> : <span className="text-2xl">{c.icon}</span>}</div>
+                              <div className={`text-[9px] mt-1 font-bold leading-tight ${selected ? 'text-space-accent' : 'text-gray-400'}`}>{c.name.split(' ')[0]}</div>
                             </div>
                           </div>
                         );
