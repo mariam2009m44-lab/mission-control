@@ -13,6 +13,9 @@ import MissionHistory from './components/MissionHistory';
 import LaunchSequence from './components/LaunchSequence';
 import InfoCard from './components/InfoCard';
 import SpaceJourney from './components/SpaceJourney';
+import AchievementToast from './components/AchievementToast';
+import AchievementsPage from './components/AchievementsPage';
+import { achievements, checkNewAchievements } from './data/achievements';
 import { playClick, playSuccess, playFailure, initAudio, startAmbientMusic } from './utils/sounds';
 
 function App() {
@@ -70,6 +73,34 @@ function GameScreen({ user, onLogout }) {
   const [infoComponent, setInfoComponent] = useState(null);
   const [showJourney, setShowJourney] = useState(false);
   const [musicOn, setMusicOn] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [newAchievement, setNewAchievement] = useState(null);
+  const [unlockedIds, setUnlockedIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('mc_achievements') || '[]');
+    } catch { return []; }
+  });
+  const [stats, setStats] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('mc_stats') || 'null') || {
+        totalMissions: 0,
+        successfulMissions: 0,
+        visitedPlanets: [],
+        usedRockets: [],
+        bestScience: 0,
+        bestBudget: null,
+        bestScore: 0,
+      };
+    } catch { return {
+      totalMissions: 0,
+      successfulMissions: 0,
+      visitedPlanets: [],
+      usedRockets: [],
+      bestScience: 0,
+      bestBudget: null,
+      bestScore: 0,
+    }; }
+  });
 
   const design = { objectiveId, rocketId, componentIds };
   const metrics = calculateMetrics(design);
@@ -113,6 +144,7 @@ function GameScreen({ user, onLogout }) {
       score: res.score,
       status: res.status,
     });
+    updateStatsAndCheck(res, []);
   };
 
   return (
@@ -137,6 +169,12 @@ function GameScreen({ user, onLogout }) {
                 }`}
               >
                 {musicOn ? '🎵' : '🔇'}
+              </button>
+                            <button
+                onClick={() => setShowAchievements(true)}
+                className="text-xs px-2 md:px-3 py-1 bg-space-warning/20 border border-space-warning/50 text-space-warning rounded-lg hover:bg-space-warning/30"
+              >
+                🏆 {unlockedIds.length}
               </button>
               <button
                 onClick={() => setShowHistory(true)}
@@ -358,6 +396,24 @@ function GameScreen({ user, onLogout }) {
 
         <AnimatePresence>
           {showHistory && <MissionHistory onClose={() => setShowHistory(false)} />}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showAchievements && (
+            <AchievementsPage
+              unlockedIds={unlockedIds}
+              onClose={() => setShowAchievements(false)}
+            />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {newAchievement && (
+            <AchievementToast
+              achievement={newAchievement}
+              onClose={() => setNewAchievement(null)}
+            />
+          )}
         </AnimatePresence>
 
         <AnimatePresence>
