@@ -3,15 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { objectives } from './data/objectives';
 import { components } from './data/spacecraft';
 import { rockets } from './data/rockets';
-import { spacecraftList, getSpacecraftType } from './data/spacecraftTypes';
-import { awardXP, xpProgress, calculateLevel, getUnlockedTypes } from './data/levelSystem';
 import { calculateMetrics, validateDesign, simulateLaunch } from './engine/simulator';
 import { getCurrentUser, logout, saveMission } from './utils/auth';
 import Starfield from './components/Starfield';
-import RealisticSpacecraft from './components/RealisticSpacecraft';
+import Spacecraft from './components/Spacecraft';
 import MetricBar from './components/MetricBar';
 import AuthScreen from './components/AuthScreen';
-import WelcomeScreen from './components/WelcomeScreen';
 import MissionHistory from './components/MissionHistory';
 import LaunchSequence from './components/LaunchSequence';
 import InfoCard from './components/InfoCard';
@@ -19,8 +16,6 @@ import SpaceJourney from './components/SpaceJourney';
 import AchievementToast from './components/AchievementToast';
 import AchievementsPage from './components/AchievementsPage';
 import StatisticsPage from './components/StatisticsPage';
-import LevelUpToast from './components/LevelUpToast';
-import { ProIcons, ObjectiveIcons, RocketIcons, SpacecraftTypeIcons } from './components/ProIcons';
 import { achievements, checkNewAchievements } from './data/achievements';
 import { playClick, playSuccess, playFailure, initAudio, startAmbientMusic } from './utils/sounds';
 
@@ -79,15 +74,8 @@ function GameScreen({ user, onLogout }) {
   const [infoComponent, setInfoComponent] = useState(null);
   const [showJourney, setShowJourney] = useState(false);
   const [musicOn, setMusicOn] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showStats, setShowStats] = useState(false);
-  const [spacecraftTypeId, setSpacecraftTypeId] = useState('scout');
-  const [xp, setXp] = useState(() => {
-    try { return parseInt(localStorage.getItem('mc_xp') || '0'); }
-    catch { return 0; }
-  });
-  const [showLevelUp, setShowLevelUp] = useState(null);
   const [newAchievement, setNewAchievement] = useState(null);
   const [unlockedIds, setUnlockedIds] = useState(() => {
     try {
@@ -134,11 +122,6 @@ function GameScreen({ user, onLogout }) {
     playClick();
   };
 
-  const finishWelcome = () => {
-    setShowWelcome(false);
-    localStorage.setItem('mc_welcome_seen', 'true');
-  };
-
   const toggleComponent = (id) => {
     setComponentIds((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
@@ -164,16 +147,6 @@ function GameScreen({ user, onLogout }) {
       status: res.status,
     });
     updateStatsAndCheck(res, []);
-    const earnedXP = awardXP({ objective: objectiveId, score: res.score }, res.status);
-    const newXP = xp + earnedXP;
-    const oldLevel = calculateLevel(xp);
-    const newLevel = calculateLevel(newXP);
-    setXp(newXP);
-    localStorage.setItem('mc_xp', newXP.toString());
-    if (newLevel > oldLevel) {
-      setShowLevelUp(newLevel);
-      setTimeout(() => setShowLevelUp(null), 4500);
-    }
   };
 
   return (
@@ -181,22 +154,8 @@ function GameScreen({ user, onLogout }) {
       <Starfield />
       <div className="min-h-screen text-white relative overflow-hidden">
         <div className="backdrop-blur-md bg-black/30 border-b border-white/10 px-4 py-3">
-          <div className="max-w-7xl mx-auto mb-2 flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-space-accent/20 border border-space-accent/40 rounded-full px-3 py-0.5">
-              <span className="text-[10px] font-bold text-space-accent">LVL {calculateLevel(xp)}</span>
-              <div className="w-16 h-1.5 bg-black/40 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-space-accent to-cyan-300 transition-all"
-                  style={{ width: xpProgress(xp).progress + '%' }}
-                />
-              </div>
-              <span className="text-[9px] text-gray-400">{xp} XP</span>
-            </div>
-          </div>
           <div className="flex items-center justify-between max-w-7xl mx-auto">
-            <h1 
-              onDoubleClick={() => setShowWelcome(true)}
-              className="text-lg md:text-2xl font-bold bg-gradient-to-r from-space-accent to-cyan-300 bg-clip-text text-transparent cursor-pointer">
+            <h1 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-space-accent to-cyan-300 bg-clip-text text-transparent">
               🚀 Mission Control
             </h1>
             <div className="flex items-center gap-2">
@@ -223,13 +182,6 @@ function GameScreen({ user, onLogout }) {
                 className="text-xs px-2 md:px-3 py-1 bg-space-warning/20 border border-space-warning/50 text-space-warning rounded-lg hover:bg-space-warning/30"
               >
                 🏆 {unlockedIds.length}
-              </button>
-              <button
-                onClick={() => setShowWelcome(true)}
-                className="text-xs px-2 md:px-3 py-1 bg-blue-500/20 border border-blue-400/50 text-blue-300 rounded-lg hover:bg-blue-500/30"
-                title="Show Tutorial"
-              >
-                ❓
               </button>
               <button
                 onClick={() => setShowHistory(true)}
@@ -266,7 +218,7 @@ function GameScreen({ user, onLogout }) {
                         : 'bg-white/5 border-white/10 text-gray-400 hover:border-space-accent'
                     }`}
                   >
-                    <div className="flex justify-center mb-1 text-space-accent">{(() => { const Icon = ObjectiveIcons[obj.id]; return Icon ? <Icon size={28} /> : obj.icon; })()}</div>
+                    <div className="text-2xl">{obj.icon}</div>
                     <div className="font-bold mt-1">{obj.name}</div>
                   </motion.button>
                 ))}
@@ -290,7 +242,7 @@ function GameScreen({ user, onLogout }) {
               </div>
 
               <div className="flex-1 flex items-center justify-center">
-                <RealisticSpacecraft type={spacecraftTypeId} components={componentIds} />
+                <Spacecraft selectedComponents={componentIds} objective={objective} />
               </div>
 
               <motion.button
@@ -302,39 +254,6 @@ function GameScreen({ user, onLogout }) {
               >
                 🚀 LAUNCH MISSION
               </motion.button>
-            </div>
-
-            <div className="mt-3 backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-3">
-              <h3 className="text-xs text-gray-400 mb-2 font-bold">🛰️ SPACECRAFT TYPE</h3>
-              <div className="grid grid-cols-3 gap-2">
-                {spacecraftList.map((st) => {
-                  const level = calculateLevel(xp);
-                  const unlocked = getUnlockedTypes(level).includes(st.id);
-                  const selected = spacecraftTypeId === st.id;
-                  return (
-                    <button
-                      key={st.id}
-                      onClick={() => {
-                        if (!unlocked) return;
-                        setSpacecraftTypeId(st.id);
-                        playClick();
-                      }}
-                      disabled={!unlocked}
-                      className={'p-2 rounded-xl border transition-all text-center ' +
-                        (selected
-                          ? 'bg-space-accent/30 border-space-accent'
-                          : unlocked
-                          ? 'bg-white/5 border-white/10 hover:border-space-accent/50'
-                          : 'bg-black/40 border-white/5 opacity-40')
-                      }
-                    >
-                      <div className="flex justify-center text-space-accent">{unlocked ? (() => { const Icon = SpacecraftTypeIcons[st.id]; return Icon ? <Icon size={32} /> : st.icon; })() : <span className="text-3xl opacity-50">🔒</span>}</div>
-                      <div className="text-[9px] text-gray-300 mt-1">{st.name}</div>
-                      <div className="text-[8px] text-gray-500 mt-0.5">{st.baseStats.baseCost}M</div>
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
             <div className="mt-3 backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-3">
@@ -367,7 +286,7 @@ function GameScreen({ user, onLogout }) {
                         }}
                         className="cursor-pointer"
                       >
-                        <div className="text-2xl text-space-accent flex justify-center">{(() => { const Icon = ProIcons[c.id]; return Icon ? <Icon size={28} /> : c.icon; })()}</div>
+                        <div className="text-2xl">{c.icon}</div>
                         <div className="text-[9px] text-gray-300 mt-1 leading-tight">
                           {c.name.split(' ')[0]}
                         </div>
@@ -398,7 +317,7 @@ function GameScreen({ user, onLogout }) {
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl text-space-accent">{(() => { const Icon = RocketIcons[r.id]; return Icon ? <Icon size={24} /> : r.icon; })()}</span>
+                      <span className="text-2xl">{r.icon}</span>
                       <div className="flex-1">
                         <div className="text-xs font-bold">{r.name}</div>
                         <div className="text-[10px] text-gray-500">
@@ -511,23 +430,8 @@ function GameScreen({ user, onLogout }) {
         </AnimatePresence>
 
         <AnimatePresence>
-          {showLevelUp && (
-            <LevelUpToast
-              level={showLevelUp}
-              onClose={() => setShowLevelUp(null)}
-            />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
           {infoComponent && (
             <InfoCard componentId={infoComponent} onClose={() => setInfoComponent(null)} />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showWelcome && (
-            <WelcomeScreen username={user.username} onStart={finishWelcome} />
           )}
         </AnimatePresence>
 
