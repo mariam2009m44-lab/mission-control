@@ -11,6 +11,7 @@ import MetricBar from './components/MetricBar';
 import AuthScreen from './components/AuthScreen';
 import MissionHistory from './components/MissionHistory';
 import LaunchSequence from './components/LaunchSequence';
+import InfoCard from './components/InfoCard';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -64,6 +65,7 @@ function GameScreen({ user, onLogout }) {
   const [showResult, setShowResult] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showLaunch, setShowLaunch] = useState(false);
+  const [infoComponent, setInfoComponent] = useState(null);
 
   const design = { objectiveId, rocketId, componentIds };
   const metrics = calculateMetrics(design);
@@ -184,21 +186,33 @@ function GameScreen({ user, onLogout }) {
                 {Object.values(components).map((c) => {
                   const selected = componentIds.includes(c.id);
                   return (
-                    <motion.button
+                    <div
                       key={c.id}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => toggleComponent(c.id)}
-                      className={`p-2 rounded-xl border transition-all text-center ${
+                      className={`relative p-2 rounded-xl border transition-all text-center ${
                         selected
                           ? 'bg-space-accent/30 border-space-accent'
                           : 'bg-white/5 border-white/10 hover:border-space-accent/50'
                       }`}
                     >
-                      <div className="text-2xl">{c.icon}</div>
-                      <div className="text-[9px] text-gray-300 mt-1 leading-tight">
-                        {c.name.split(' ')[0]}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInfoComponent(c.id);
+                        }}
+                        className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-space-accent/40 text-space-accent text-[8px] font-bold flex items-center justify-center hover:bg-space-accent hover:text-space-900"
+                      >
+                        i
+                      </button>
+                      <div
+                        onClick={() => toggleComponent(c.id)}
+                        className="cursor-pointer"
+                      >
+                        <div className="text-2xl">{c.icon}</div>
+                        <div className="text-[9px] text-gray-300 mt-1 leading-tight">
+                          {c.name.split(' ')[0]}
+                        </div>
                       </div>
-                    </motion.button>
+                    </div>
                   );
                 })}
               </div>
@@ -255,9 +269,9 @@ function GameScreen({ user, onLogout }) {
         <AnimatePresence>
           {showLaunch && (
             <LaunchSequence
-              rocket={selectedRocket}
+              rocket={selectedRocket} design={design}
               objective={objective}
-              onComplete={finishLaunch}
+              onComplete={(events) => finishLaunch(events)}
             />
           )}
         </AnimatePresence>
@@ -307,6 +321,12 @@ function GameScreen({ user, onLogout }) {
 
         <AnimatePresence>
           {showHistory && <MissionHistory onClose={() => setShowHistory(false)} />}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {infoComponent && (
+            <InfoCard componentId={infoComponent} onClose={() => setInfoComponent(null)} />
+          )}
         </AnimatePresence>
 
         <footer className="text-center text-gray-600 text-[10px] pb-4">
