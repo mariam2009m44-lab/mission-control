@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { generateRandomEvents } from '../engine/randomEvents';
+import { playCountdownBeep, playLaunchSound, playClick } from '../utils/sounds';
 
 export default function LaunchSequence({ rocket, objective, design, onComplete }) {
   const [phase, setPhase] = useState('countdown');
@@ -11,14 +12,17 @@ export default function LaunchSequence({ rocket, objective, design, onComplete }
   useEffect(() => {
     if (phase === 'countdown') {
       if (count > 0) {
+        playCountdownBeep(count === 1);
         const t = setTimeout(() => setCount(count - 1), 800);
         return () => clearTimeout(t);
       } else {
+        playCountdownBeep(true);
         setPhase('launch');
       }
     }
 
     if (phase === 'launch') {
+      playLaunchSound();
       const t = setTimeout(() => {
         const evs = generateRandomEvents(design);
         setEvents(evs);

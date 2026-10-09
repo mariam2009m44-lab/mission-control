@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import { planets } from '../data/planets';
+import { playPlanetDiscover, playClick } from '../utils/sounds';
 
 export default function SpaceJourney({ objective, rocket, onComplete }) {
   const containerRef = useRef(null);
@@ -74,7 +75,10 @@ export default function SpaceJourney({ objective, rocket, onComplete }) {
   const handlePlanetClick = (planet) => {
     setSelectedPlanet(planet);
     if (!visited.includes(planet.id)) {
+      playPlanetDiscover();
       setVisited((v) => [...v, planet.id]);
+    } else {
+      playClick();
     }
   };
 

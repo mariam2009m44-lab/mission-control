@@ -13,6 +13,7 @@ import MissionHistory from './components/MissionHistory';
 import LaunchSequence from './components/LaunchSequence';
 import InfoCard from './components/InfoCard';
 import SpaceJourney from './components/SpaceJourney';
+import { playClick, playSuccess, playFailure, initAudio, startAmbientMusic } from './utils/sounds';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -82,6 +83,8 @@ function GameScreen({ user, onLogout }) {
   };
 
   const handleLaunch = () => {
+    initAudio();
+    playClick();
     setShowLaunch(true);
   };
 
@@ -137,7 +140,10 @@ function GameScreen({ user, onLogout }) {
                   <motion.button
                     key={obj.id}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setObjectiveId(obj.id)}
+                    onClick={() => {
+                      playClick();
+                      setObjectiveId(obj.id);
+                    }}
                     className={`w-full p-2 rounded-xl text-left text-xs border transition-all ${
                       objectiveId === obj.id
                         ? 'bg-space-accent/20 border-space-accent text-white'
@@ -206,7 +212,10 @@ function GameScreen({ user, onLogout }) {
                         i
                       </button>
                       <div
-                        onClick={() => toggleComponent(c.id)}
+                        onClick={() => {
+                          playClick();
+                          toggleComponent(c.id);
+                        }}
                         className="cursor-pointer"
                       >
                         <div className="text-2xl">{c.icon}</div>
@@ -229,7 +238,10 @@ function GameScreen({ user, onLogout }) {
                   <motion.button
                     key={r.id}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setRocketId(r.id)}
+                    onClick={() => {
+                      playClick();
+                      setRocketId(r.id);
+                    }}
                     className={`w-full p-2 rounded-xl border text-left transition-all ${
                       rocketId === r.id
                         ? 'bg-space-accent/20 border-space-accent'
