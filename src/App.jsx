@@ -12,6 +12,7 @@ import AuthScreen from './components/AuthScreen';
 import MissionHistory from './components/MissionHistory';
 import LaunchSequence from './components/LaunchSequence';
 import InfoCard from './components/InfoCard';
+import SpaceJourney from './components/SpaceJourney';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -66,6 +67,7 @@ function GameScreen({ user, onLogout }) {
   const [showHistory, setShowHistory] = useState(false);
   const [showLaunch, setShowLaunch] = useState(false);
   const [infoComponent, setInfoComponent] = useState(null);
+  const [showJourney, setShowJourney] = useState(false);
 
   const design = { objectiveId, rocketId, componentIds };
   const metrics = calculateMetrics(design);
