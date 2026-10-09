@@ -12,6 +12,7 @@ import RealisticSpacecraft from './components/RealisticSpacecraft';
 import MetricBar from './components/MetricBar';
 import AuthScreen from './components/AuthScreen';
 import WelcomeScreen from './components/WelcomeScreen';
+import MissionCard from './components/MissionCard';
 import MissionHistory from './components/MissionHistory';
 import Leaderboard from './components/Leaderboard';
 import AIAssistant from './components/AIAssistant';
@@ -128,17 +129,14 @@ function GameScreen({ user, onLogout }) {
               {activeTab === 'mission' && (
                 <motion.div key="m" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-3">
                   <div className="text-center mb-4"><h2 className="text-xl font-bold text-space-accent">🎯 Choose Your Mission</h2><p className="text-xs text-gray-400">Where do you want to go?</p></div>
-                  {objectives.map((obj) => {
-                    const Icon = ObjectiveIcons[obj.id];
-                    const selected = objectiveId === obj.id;
-                    return (
-                      <motion.button key={obj.id} whileTap={{ scale: 0.98 }} onClick={() => { playClick(); setObjectiveId(obj.id); }} className={'w-full p-4 rounded-2xl border-2 text-left flex items-center gap-4 ' + (selected ? 'bg-space-accent/20 border-space-accent' : 'bg-white/5 border-white/10')}>
-                        <div className={'w-14 h-14 rounded-xl flex items-center justify-center ' + (selected ? 'bg-space-accent/30' : 'bg-white/5')}>{Icon && <Icon size={32} className={selected ? 'text-space-accent' : 'text-gray-400'} />}</div>
-                        <div className="flex-1"><div className={'text-base font-bold ' + (selected ? 'text-space-accent' : 'text-white')}>{obj.name}</div><div className="text-[11px] text-gray-400 mt-0.5">{obj.description}</div></div>
-                        {selected && <div className="text-space-accent text-2xl">✓</div>}
-                      </motion.button>
-                    );
-                  })}
+                  {objectives.map((obj) => (
+                    <MissionCard
+                      key={obj.id}
+                      objective={obj}
+                      selected={objectiveId === obj.id}
+                      onClick={() => { playClick(); setObjectiveId(obj.id); }}
+                    />
+                  ))}
                 </motion.div>
               )}
               {activeTab === 'build' && (
