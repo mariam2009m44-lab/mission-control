@@ -15,6 +15,7 @@ import WelcomeScreen from './components/WelcomeScreen';
 import MissionHistory from './components/MissionHistory';
 import Leaderboard from './components/Leaderboard';
 import AIAssistant from './components/AIAssistant';
+import RandomEvent, { pickRandomEvent } from './components/RandomEvent';
 import LaunchSequence from './components/LaunchSequence';
 import SpaceJourney from './components/SpaceJourney';
 import AchievementsPage from './components/AchievementsPage';
@@ -44,6 +45,8 @@ function GameScreen({ user, onLogout }) {
   const [showHistory, setShowHistory] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showAI, setShowAI] = useState(false);
+  const [activeEvent, setActiveEvent] = useState(null);
+  const [eventBonus, setEventBonus] = useState(0);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
@@ -65,7 +68,17 @@ function GameScreen({ user, onLogout }) {
 
   const toggleComponent = (id) => { playClick(); setComponentIds((prev) => prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]); };
   const handleLaunch = () => { initAudio(); playClick(); setShowLaunch(true); };
-  const finishLaunch = () => { setShowLaunch(false); setShowJourney(true); };
+  const finishLaunch = () => {
+    setShowLaunch(false);
+    const ev = pickRandomEvent(design);
+    setTimeout(() => setActiveEvent(ev), 500);
+  };
+
+  const handleEventResolve = (outcome) => {
+    setEventBonus((prev) => prev + (outcome.scienceDelta || 0));
+    setActiveEvent(null);
+    setTimeout(() => setShowJourney(true), 500);
+  };
   const finishJourney = () => {
     const res = simulateLaunch(metrics, design);
     setResult(res); setShowJourney(false); setShowResult(true);
@@ -227,6 +240,7 @@ function GameScreen({ user, onLogout }) {
         <AnimatePresence>{showHistory && <MissionHistory onClose={() => setShowHistory(false)} />}</AnimatePresence>
         <AnimatePresence>{showLeaderboard && <Leaderboard onClose={() => setShowLeaderboard(false)} currentUser={user.username} />}</AnimatePresence>
         <AnimatePresence>{showAI && <AIAssistant design={design} onClose={() => setShowAI(false)} />}</AnimatePresence>
+        <AnimatePresence>{activeEvent && <RandomEvent event={activeEvent} onResolve={handleEventResolve} />}</AnimatePresence>
         <AnimatePresence>{showAchievements && <AchievementsPage unlockedIds={unlockedIds} onClose={() => setShowAchievements(false)} />}</AnimatePresence>
         <AnimatePresence>{showStats && <StatisticsPage onClose={() => setShowStats(false)} />}</AnimatePresence>
         <AnimatePresence>{showWelcome && <WelcomeScreen username={user.username} onStart={() => setShowWelcome(false)} />}</AnimatePresence>
