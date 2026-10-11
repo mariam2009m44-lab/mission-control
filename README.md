@@ -1,16 +1,33 @@
-# React + Vite
+# 🚀 Mission Control
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Space Mission Design Game for NASA Space Apps Challenge
 
-Currently, two official plugins are available:
+🎮 Play Now: https://mission-control-wine-three.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- 🎯 3 Mission Objectives (Moon, Mars, Earth)
+- 🛰️ Spacecraft Builder with 10+ components
+- 🚀 3 Real Rockets (Electron, Falcon 9, SLS)
+- 📊 Live Budget, Mass & Power tracking
+- 🤖 AI Mission Assistant
+- 🎲 Random Space Events
+- 🏆 Global Leaderboard
+- 🌅 Space Journey with NASA data
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the Oxlint configuration
+- React 19 + Vite 6
+- Tailwind CSS 3 + Framer Motion
+- NASA Open APIs
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Run Locally
+
+npm install
+npm run dev
+
+Open http://localhost:5173
+
+## License
+
+MIT License
