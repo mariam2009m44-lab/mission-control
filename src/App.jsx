@@ -265,9 +265,23 @@ function GameScreen({ user, onLogout }) {
                     <MetricBar label="Budget" value={metrics.cost} max={100} unit="M$" color={metrics.cost > 100 ? 'danger' : 'warning'} icon="💰" />
                     <MetricBar label="Power" value={Math.max(metrics.power, 0)} max={500} unit="W" color={metrics.power < 0 ? 'danger' : 'success'} icon="⚡" />
                   </div>
-                  <motion.button whileTap={{ scale: 0.97 }} onClick={handleLaunch} disabled={!validation.isValid} className={'w-full py-4 rounded-2xl font-bold text-lg shadow-2xl ' + (validation.isValid ? 'bg-gradient-to-r from-space-accent to-cyan-300 text-space-900' : 'bg-gray-700 text-gray-500')}>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.02 }}
+                  animate={validation.isValid ? { boxShadow: ['0 0 0px rgba(34,211,238,0.4)', '0 0 25px rgba(34,211,238,0.9)', '0 0 0px rgba(34,211,238,0.4)'] } : {}}
+                  transition={validation.isValid ? { duration: 1.8, repeat: Infinity, ease: 'easeInOut' } : {}}
+                  onClick={handleLaunch}
+                  disabled={!validation.isValid}
+                  className={`w-full py-4 rounded-2xl font-bold text-lg shadow-xl ${validation.isValid ? 'bg-gradient-to-r from-space-accent to-cyan-300 text-space-900' : 'bg-gray-700 text-gray-500'}`}
+                >
+                  <motion.span
+                    animate={validation.isValid ? { y: [0, -4, 0] } : {}}
+                    transition={validation.isValid ? { duration: 1.2, repeat: Infinity, ease: 'easeInOut' } : {}}
+                    className="inline-block"
+                  >
                     {validation.isValid ? '🚀 LAUNCH MISSION' : '⚠ Fix errors first'}
-                  </motion.button>
+                  </motion.span>
+                </motion.button>
                 </motion.div>
               )}
               {activeTab === 'explore' && (
