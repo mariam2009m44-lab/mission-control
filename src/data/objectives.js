@@ -6,7 +6,7 @@ export const objectives = [
     description: 'Explore the Moon surface and gather geological data',
     difficulty: 3,
     minBudget: 80,
-    scienceTarget: 60,
+    scienceTarget: 50,
   },
   {
     id: 'mars',
@@ -15,7 +15,7 @@ export const objectives = [
     description: 'Study the Martian surface and atmosphere',
     difficulty: 5,
     minBudget: 150,
-    scienceTarget: 100,
+    scienceTarget: 80,
   },
   {
     id: 'earth',
@@ -24,7 +24,7 @@ export const objectives = [
     description: 'Monitor climate and environmental changes',
     difficulty: 2,
     minBudget: 60,
-    scienceTarget: 40,
+    scienceTarget: 30,
   },
 ];
 
