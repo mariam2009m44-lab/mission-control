@@ -90,9 +90,9 @@ export const simulateLaunch = (metrics, design, eventBonus = 0) => {
   if (luck > reliability) {
     status = 'PARTIAL';
     score *= 0.6;
-  } else if (score > 150) {
+  } else if (score > 110) {
     status = 'SUCCESS';
-  } else if (score > 80) {
+  } else if (score > 60) {
     status = 'PARTIAL';
   } else {
     status = 'FAILED';
