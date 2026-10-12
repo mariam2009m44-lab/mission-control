@@ -1,6 +1,6 @@
 export async function getAIResponse(chatHistory) {
   try {
-    const response = await fetch("https://text.pollinations.ai/", {
+    const response = await fetch("https://corsproxy.io/?https://text.pollinations.ai/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
