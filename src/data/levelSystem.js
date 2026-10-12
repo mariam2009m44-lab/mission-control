@@ -1,3 +1,4 @@
+import { getObjective } from './objectives';
 const XP_PER_LEVEL = [0, 100, 250, 500, 900, 1500, 2300, 3400, 5000, 7000];
 export const MAX_LEVEL = XP_PER_LEVEL.length - 1;
 export const calculateLevel = (xp) => {
@@ -23,8 +24,8 @@ export const awardXP = (mission, status) => {
   let xp = 50;
   if (status === 'SUCCESS') xp += 150;
   else if (status === 'PARTIAL') xp += 80;
-  if (mission.objective === 'mars') xp += 100;
-  else if (mission.objective === 'lunar') xp += 50;
+  const obj = getObjective(mission.objective);
+  if (obj) xp += obj.difficulty * 20;
   if (mission.score > 150) xp += 100;
   return xp;
 };
