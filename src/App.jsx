@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { objectives } from './data/objectives';
 import { components } from './data/spacecraft';
 import { rockets } from './data/rockets';
 import { calculateMetrics, validateDesign, simulateLaunch } from './engine/simulator';
-import { getCurrentUser, logout, saveMission } from './utils/auth';
+import { getCurrentUser, logout, saveMission, getMissions } from './utils/auth';
 import { spacecraftList } from './data/spacecraftTypes';
-import { calculateLevel, getUnlockedTypes, xpProgress } from './data/levelSystem';
+import { calculateLevel, getUnlockedTypes, xpProgress, awardXP } from './data/levelSystem';
+import { checkNewAchievements } from './data/achievements';
 import Starfield from './components/Starfield';
 import RealisticSpacecraft from './components/RealisticSpacecraft';
 import MetricBar from './components/MetricBar';
@@ -20,17 +21,30 @@ import RandomEvent, { pickRandomEvent } from './components/RandomEvent';
 import LaunchSequence from './components/LaunchSequence';
 import SpaceJourney from './components/SpaceJourney';
 import AchievementsPage from './components/AchievementsPage';
+import AchievementToast from './components/AchievementToast';
 import StatisticsPage from './components/StatisticsPage';
 import InfoCard from './components/InfoCard';
 import ExploreSpace from './components/ExploreSpace';
-import { ProIcons, ObjectiveIcons, RocketIcons, SpacecraftTypeIcons } from './components/ProIcons';
+import { ProIcons, SpacecraftTypeIcons } from './components/ProIcons';
+import { RocketIcons } from './components/RocketIcons';
 import { playClick, playSuccess, playFailure, initAudio, startAmbientMusic, stopAmbientMusic } from './utils/sounds';
 
+const buildStats = (missions) => ({
+  totalMissions: missions.length,
+  successfulMissions: missions.filter((m) => m.status === 'SUCCESS').length,
+  visitedPlanets: [...new Set(missions.map((m) => m.objective))],
+  usedRockets: [...new Set(missions.map((m) => m.rocket))],
+  bestScience: Math.max(0, ...missions.map((m) => m.science || 0)),
+  bestScore: Math.max(0, ...missions.map((m) => m.score || 0)),
+  bestBudget: missions.length ? Math.min(...missions.map((m) => m.cost ?? 999)) : null,
+});
+
+const loadNumber = (key) => { try { return parseInt(localStorage.getItem(key) || '0', 10); } catch { return 0; } };
+const loadList = (key) => { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } };
+
 function App() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => { setUser(getCurrentUser()); setLoading(false); }, []);
-  if (loading) return (<><Starfield /><div className="min-h-screen flex items-center justify-center text-white"><motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="text-5xl">🚀</motion.div></div></>);
+  const [user, setUser] = useState(() => getCurrentUser());
+
   if (!user) return (<><Starfield /><AuthScreen onAuth={setUser} /></>);
   return <GameScreen user={user} onLogout={() => { logout(); setUser(null); }} />;
 }
@@ -50,14 +64,20 @@ function GameScreen({ user, onLogout }) {
   const [eventBonus, setEventBonus] = useState(0);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showStats, setShowStats] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
   const [showExplore, setShowExplore] = useState(false);
   const [showLaunch, setShowLaunch] = useState(false);
   const [showJourney, setShowJourney] = useState(false);
   const [infoComponent, setInfoComponent] = useState(null);
   const [musicOn, setMusicOn] = useState(false);
-  const [xp, setXp] = useState(() => { try { return parseInt(localStorage.getItem('mc_xp') || '0'); } catch { return 0; } });
-  const [unlockedIds, setUnlockedIds] = useState(() => { try { return JSON.parse(localStorage.getItem('mc_achievements') || '[]'); } catch { return []; } });
+
+  const xpKey = `mc_xp_${user.username}`;
+  const achKey = `mc_achievements_${user.username}`;
+  const welcomeKey = `mc_welcomed_${user.username}`;
+
+  const [xp, setXp] = useState(() => loadNumber(xpKey));
+  const [unlockedIds, setUnlockedIds] = useState(() => loadList(achKey));
+  const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem(welcomeKey));
+  const [achievementQueue, setAchievementQueue] = useState([]);
 
   const design = { objectiveId, rocketId, componentIds };
   const metrics = calculateMetrics(design);
@@ -67,8 +87,13 @@ function GameScreen({ user, onLogout }) {
   const level = calculateLevel(xp);
   const xpInfo = xpProgress(xp);
 
-  const toggleComponent = (id) => { playClick(); setComponentIds((prev) => prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]); };
-  const handleLaunch = () => { initAudio(); playClick(); setShowLaunch(true); };
+  const toggleComponent = (id) => {
+    playClick();
+    setComponentIds((prev) => prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]);
+  };
+
+  const handleLaunch = () => { initAudio(); playClick(); setEventBonus(0); setShowLaunch(true); };
+
   const finishLaunch = () => {
     setShowLaunch(false);
     const ev = pickRandomEvent(design);
@@ -80,13 +105,54 @@ function GameScreen({ user, onLogout }) {
     setActiveEvent(null);
     setTimeout(() => setShowJourney(true), 500);
   };
+
   const finishJourney = () => {
-    const res = simulateLaunch(metrics, design);
-    setResult(res); setShowJourney(false); setShowResult(true);
-    saveMission({ objective: objectiveId, rocket: rocketId, parts: componentIds, score: res.score, status: res.status });
+    const res = simulateLaunch(metrics, design, eventBonus);
+    setResult(res);
+    setShowJourney(false);
+    setShowResult(true);
+
+    saveMission({
+      objective: objectiveId,
+      rocket: rocketId,
+      parts: componentIds,
+      score: res.score,
+      status: res.status,
+      cost: metrics.cost,
+      science: res.finalScience,
+    });
+
+    const gained = awardXP({ objective: objectiveId, score: res.score }, res.status);
+    setXp((prev) => {
+      const next = prev + gained;
+      localStorage.setItem(xpKey, String(next));
+      return next;
+    });
+
+    const stats = buildStats(getMissions());
+    const newAchievements = checkNewAchievements(stats, unlockedIds);
+    if (newAchievements.length > 0) {
+      const newIds = [...unlockedIds, ...newAchievements.map((a) => a.id)];
+      setUnlockedIds(newIds);
+      localStorage.setItem(achKey, JSON.stringify(newIds));
+      setAchievementQueue(newAchievements);
+    }
+
     setTimeout(() => { if (res.status === 'SUCCESS') playSuccess(); else playFailure(); }, 400);
   };
-  const toggleMusic = () => { const n = !musicOn; setMusicOn(n); initAudio(); if (n) startAmbientMusic(); else stopAmbientMusic(); playClick(); };
+
+  const toggleMusic = () => {
+    const n = !musicOn;
+    setMusicOn(n);
+    initAudio();
+    if (n) startAmbientMusic(); else stopAmbientMusic();
+    playClick();
+  };
+
+  const closeWelcome = () => {
+    localStorage.setItem(welcomeKey, '1');
+    setShowWelcome(false);
+  };
 
   const tabs = [
     { id: 'mission', icon: '🎯', label: 'Mission' },
@@ -114,7 +180,7 @@ function GameScreen({ user, onLogout }) {
             <div className="flex items-center gap-1.5">
               <button onClick={toggleMusic} className={'text-[10px] px-2 py-1 rounded-lg border ' + (musicOn ? 'bg-space-success/20 border-space-success/50 text-space-success' : 'bg-white/5 border-white/10 text-gray-400')}>{musicOn ? '🎵' : '🔇'}</button>
               <button onClick={() => { playClick(); setShowStats(true); }} className="text-[10px] px-2 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg">📊</button>
-              <button onClick={() => { playClick(); setShowAchievements(true); }} className="text-[10px] px-2 py-1 bg-space-warning/20 border border-space-warning/50 text-space-warning rounded-lg">🏆</button>
+              <button onClick={() => { playClick(); setShowAchievements(true); }} className="text-[10px] px-2 py-1 bg-space-warning/20 border border-space-warning/50 text-space-warning rounded-lg">🏅</button>
               <button onClick={() => { playClick(); setShowLeaderboard(true); }} className="text-[10px] px-2 py-1 bg-yellow-500/20 border border-yellow-400/50 text-yellow-300 rounded-lg">🏆</button>
               <button onClick={() => { playClick(); setShowAI(true); }} className="text-[10px] px-2 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg">🤖</button>
               <button onClick={() => { playClick(); setShowHistory(true); }} className="text-[10px] px-2 py-1 bg-space-accent/20 border border-space-accent/50 text-space-accent rounded-lg">📜</button>
@@ -130,12 +196,7 @@ function GameScreen({ user, onLogout }) {
                 <motion.div key="m" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-3">
                   <div className="text-center mb-4"><h2 className="text-xl font-bold text-space-accent">🎯 Choose Your Mission</h2><p className="text-xs text-gray-400">Where do you want to go?</p></div>
                   {objectives.map((obj) => (
-                    <MissionCard
-                      key={obj.id}
-                      objective={obj}
-                      selected={objectiveId === obj.id}
-                      onClick={() => { playClick(); setObjectiveId(obj.id); }}
-                    />
+                    <MissionCard key={obj.id} objective={obj} selected={objectiveId === obj.id} onClick={() => { playClick(); setObjectiveId(obj.id); }} />
                   ))}
                 </motion.div>
               )}
@@ -174,8 +235,8 @@ function GameScreen({ user, onLogout }) {
                           <div key={c.id} className={'relative p-2 rounded-xl border-2 text-center cursor-pointer transition-all ' + (selected ? 'bg-space-accent/20 border-space-accent shadow-lg shadow-space-accent/30' : 'bg-white/5 border-white/10 hover:border-space-accent/40')}>
                             <button onClick={(e) => { e.stopPropagation(); setInfoComponent(c.id); }} className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-space-accent/40 text-space-accent text-[8px] font-bold leading-none flex items-center justify-center">i</button>
                             <div onClick={() => toggleComponent(c.id)}>
-                              <div className={`flex justify-center transition-all ${selected ? 'drop-shadow-[0_0_8px_rgba(0,212,255,0.8)]' : ''}`}>{Icon ? <Icon size={26} className={selected ? 'text-space-accent' : 'text-gray-300'} /> : <span className="text-2xl">{c.icon}</span>}</div>
-                              <div className={`text-[9px] mt-1 font-bold leading-tight ${selected ? 'text-space-accent' : 'text-gray-400'}`}>{c.name.split(' ')[0]}</div>
+                              <div className={'flex justify-center transition-all ' + (selected ? 'drop-shadow-[0_0_8px_rgba(0,212,255,0.8)]' : '')}>{Icon ? <Icon size={26} className={selected ? 'text-space-accent' : 'text-gray-300'} /> : <span className="text-2xl">{c.icon}</span>}</div>
+                              <div className={'text-[9px] mt-1 font-bold leading-tight ' + (selected ? 'text-space-accent' : 'text-gray-400')}>{c.name.split(' ')[0]}</div>
                             </div>
                           </div>
                         );
@@ -233,17 +294,32 @@ function GameScreen({ user, onLogout }) {
         </div>
 
         <AnimatePresence>{showLaunch && <LaunchSequence rocket={selectedRocket} objective={objective} design={design} onComplete={finishLaunch} />}</AnimatePresence>
-        <AnimatePresence>{showJourney && <SpaceJourney objective={objective} rocket={selectedRocket} onComplete={finishJourney} />}</AnimatePresence>
-        <AnimatePresence>{showResult && result && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={() => setShowResult(false)}><motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} onClick={(e) => e.stopPropagation()} className="bg-space-800/95 border border-white/20 rounded-3xl p-6 max-w-md w-full text-center"><div className="text-7xl mb-3">{result.status === 'SUCCESS' ? '🎉' : result.status === 'PARTIAL' ? '📊' : '❌'}</div><h2 className="text-2xl font-bold text-space-accent mb-2">{result.message}</h2><p className="text-gray-400 text-sm mb-4">Score: {result.score}</p><button onClick={() => setShowResult(false)} className="w-full py-3 bg-space-accent text-space-900 rounded-xl font-bold">PLAY AGAIN</button></motion.div></motion.div>)}</AnimatePresence>
+        <AnimatePresence>{activeEvent && <RandomEvent event={activeEvent} onResolve={handleEventResolve} />}</AnimatePresence>
+        <AnimatePresence>{showJourney && <SpaceJourney rocketId={rocketId} rocketColor="default" objective={objective} onComplete={finishJourney} />}</AnimatePresence>
+        <AnimatePresence>{showResult && result && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md z-[90] flex items-center justify-center p-4" onClick={() => setShowResult(false)}>
+            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} onClick={(e) => e.stopPropagation()} className="bg-space-800/95 border border-white/20 rounded-3xl p-6 max-w-md w-full text-center">
+              <div className="text-7xl mb-3">{result.status === 'SUCCESS' ? '🎉' : result.status === 'PARTIAL' ? '📊' : '❌'}</div>
+              <h2 className="text-2xl font-bold text-space-accent mb-2">{result.message}</h2>
+              <p className="text-gray-400 text-sm mb-4">Score: {result.score}</p>
+              <div className="bg-white/5 rounded-xl p-3 text-left text-xs space-y-1 mb-4">
+                {result.details?.map((d, i) => <div key={i} className="text-gray-300">• {d}</div>)}
+              </div>
+              <button onClick={() => setShowResult(false)} className="w-full py-3 bg-gradient-to-r from-space-accent to-cyan-400 text-space-900 rounded-xl font-bold">🔄 PLAY AGAIN</button>
+            </motion.div>
+          </motion.div>
+        )}</AnimatePresence>
         <AnimatePresence>{showHistory && <MissionHistory onClose={() => setShowHistory(false)} />}</AnimatePresence>
         <AnimatePresence>{showLeaderboard && <Leaderboard onClose={() => setShowLeaderboard(false)} currentUser={user.username} />}</AnimatePresence>
         <AnimatePresence>{showAI && <AIAssistant design={design} onClose={() => setShowAI(false)} />}</AnimatePresence>
-        <AnimatePresence>{activeEvent && <RandomEvent event={activeEvent} onResolve={handleEventResolve} />}</AnimatePresence>
         <AnimatePresence>{showAchievements && <AchievementsPage unlockedIds={unlockedIds} onClose={() => setShowAchievements(false)} />}</AnimatePresence>
         <AnimatePresence>{showStats && <StatisticsPage onClose={() => setShowStats(false)} />}</AnimatePresence>
-        <AnimatePresence>{showWelcome && <WelcomeScreen username={user.username} onStart={() => setShowWelcome(false)} />}</AnimatePresence>
         <AnimatePresence>{showExplore && <ExploreSpace onClose={() => setShowExplore(false)} />}</AnimatePresence>
         <AnimatePresence>{infoComponent && <InfoCard componentId={infoComponent} onClose={() => setInfoComponent(null)} />}</AnimatePresence>
+        <AnimatePresence>{showWelcome && <WelcomeScreen username={user.username} onStart={closeWelcome} />}</AnimatePresence>
+        <AnimatePresence>{achievementQueue.length > 0 && (
+          <AchievementToast key={achievementQueue[0].id} achievement={achievementQueue[0]} onClose={() => setAchievementQueue((q) => q.slice(1))} />
+        )}</AnimatePresence>
       </div>
     </>
   );
