@@ -178,7 +178,6 @@ function GameScreen({ user, onLogout }) {
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <button onClick={toggleMusic} className={'text-[10px] px-2 py-1 rounded-lg border ' + (musicOn ? 'bg-space-success/20 border-space-success/50 text-space-success' : 'bg-white/5 border-white/10 text-gray-400')}>{musicOn ? '🎵' : '🔇'}</button>
               <button onClick={() => { playClick(); setShowStats(true); }} className="text-[10px] px-2 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg">📊</button>
               <button onClick={() => { playClick(); setShowAchievements(true); }} className="text-[10px] px-2 py-1 bg-space-warning/20 border border-space-warning/50 text-space-warning rounded-lg">🏅</button>
               <button onClick={() => { playClick(); setShowLeaderboard(true); }} className="text-[10px] px-2 py-1 bg-yellow-500/20 border border-yellow-400/50 text-yellow-300 rounded-lg">🏆</button>
