@@ -284,12 +284,30 @@ function GameScreen({ user, onLogout }) {
 
         <div className="fixed bottom-0 left-0 right-0 z-20 backdrop-blur-xl bg-black/70 border-t border-white/10">
           <div className="max-w-2xl mx-auto grid grid-cols-4">
-            {tabs.map((tab) => (
-              <button key={tab.id} onClick={() => { playClick(); setActiveTab(tab.id); }} className={'py-3 flex flex-col items-center gap-1 ' + (activeTab === tab.id ? 'text-space-accent' : 'text-gray-500')}>
-                <span className="text-2xl">{tab.icon}</span>
-                <span className="flex-shrink-0 text-[10px] font-bold">{tab.label}</span>
-              </button>
-            ))}
+              {tabs.map((tab) => (
+                <motion.button
+                  key={tab.id}
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => { playClick(); setActiveTab(tab.id); }}
+                  className={`relative py-3 flex flex-col items-center gap-1 transition-colors ${activeTab === tab.id ? 'text-space-accent' : 'text-gray-500'}`}
+                >
+                  {activeTab === tab.id && (
+                    <motion.div
+                      layoutId="tabIndicator"
+                      className="absolute top-0 w-10 h-1 bg-space-accent rounded-full shadow-[0_0_10px_rgba(34,211,238,0.8)]"
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  <motion.span
+                    animate={activeTab === tab.id ? { scale: [1, 1.25, 1], y: [0, -3, 0] } : { scale: 1, y: 0 }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                    className={`text-2xl ${activeTab === tab.id ? 'drop-shadow-[0_0_10px_rgba(34,211,238,0.9)]' : ''}`}
+                  >
+                    {tab.icon}
+                  </motion.span>
+                  <span className={`flex-shrink-0 text-[10px] font-bold ${activeTab === tab.id ? 'text-space-accent' : 'text-gray-500'}`}>{tab.label}</span>
+                </motion.button>
+              ))}
           </div>
         </div>
 
