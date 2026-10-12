@@ -329,6 +329,27 @@ function GameScreen({ user, onLogout }) {
         <AnimatePresence>{achievementQueue.length > 0 && (
           <AchievementToast key={achievementQueue[0].id} achievement={achievementQueue[0]} onClose={() => setAchievementQueue((q) => q.slice(1))} />
         )}</AnimatePresence>
+        {showExitMenu && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { setShowExitMenu(false); setConfirmDelete(false); }}>
+            <div className="bg-space-900/95 border border-white/20 rounded-2xl p-5 max-w-xs w-full" onClick={(e) => e.stopPropagation()}>
+              {!confirmDelete ? (
+                <>
+                  <h3 className="text-lg font-bold text-space-accent text-center mb-4">Exit Options</h3>
+                  <button onClick={() => { setShowExitMenu(false); onLogout(); }} className="w-full py-3 mb-2 bg-space-accent/20 border border-space-accent/40 text-space-accent rounded-xl font-bold text-sm">🚪 Logout</button>
+                  <button onClick={() => setConfirmDelete(true)} className="w-full py-3 mb-2 bg-space-danger/20 border border-space-danger/40 text-space-danger rounded-xl font-bold text-sm">🗑️ Delete Account</button>
+                  <button onClick={() => setShowExitMenu(false)} className="w-full py-2 text-gray-400 text-xs">Cancel</button>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-bold text-space-danger text-center mb-3">⚠️ Are you sure?</h3>
+                  <p className="text-xs text-gray-400 text-center mb-4">This will permanently delete your account and all missions. Cannot be undone.</p>
+                  <button onClick={() => { deleteUser(); onLogout(); }} className="w-full py-3 mb-2 bg-space-danger text-white rounded-xl font-bold text-sm">Yes, Delete Everything</button>
+                  <button onClick={() => setConfirmDelete(false)} className="w-full py-2 text-gray-400 text-xs">Cancel</button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
