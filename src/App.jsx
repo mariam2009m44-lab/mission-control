@@ -71,7 +71,6 @@ function GameScreen({ user, onLogout }) {
   const [musicOn, setMusicOn] = useState(false);
   const [showExitMenu, setShowExitMenu] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
 
   const xpKey = `mc_xp_${user.username}`;
   const achKey = `mc_achievements_${user.username}`;
@@ -179,7 +178,14 @@ function GameScreen({ user, onLogout }) {
                   <div className="w-20 h-1.5 bg-black/40 rounded-full overflow-hidden"><div className="h-full bg-space-accent" style={{ width: xpInfo.progress + '%' }} /></div>
                 </div>
               </div>
-          <button onClick={() => { playClick(); setShowMenu(true); }} className="flex-shrink-0 text-lg px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg text-space-accent">☰</button>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => { playClick(); setShowStats(true); }} className="text-[10px] px-2 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg">📊</button>
+              <button onClick={() => { playClick(); setShowAchievements(true); }} className="text-[11px] px-2.5 py-1.5 bg-space-warning/20 border border-space-warning/50 text-space-warning rounded-lg">🏅</button>
+              <button onClick={() => { playClick(); setShowLeaderboard(true); }} className="text-[10px] px-2 py-1 bg-yellow-500/20 border border-yellow-400/50 text-yellow-300 rounded-lg">🏆</button>
+              <button onClick={() => { playClick(); setShowAI(true); }} className="text-[10px] px-2 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg">🤖</button>
+              <button onClick={() => { playClick(); setShowHistory(true); }} className="text-[11px] px-2.5 py-1.5 bg-space-accent/20 border border-space-accent/50 text-space-accent rounded-lg">📜</button>
+              <button onClick={() => setShowExitMenu(true)} className="text-[10px] px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-gray-400">Exit</button>
             </div>
           </div>
         </div>
@@ -205,7 +211,7 @@ function GameScreen({ user, onLogout }) {
                   </div></div>
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-4" style={{ minHeight: 280 }}><RealisticSpacecraft type={spacecraftTypeId} components={componentIds} /></div>
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
-                    <div className="flex-shrink-0 text-[10px] text-gray-400 font-bold mb-2">SPACECRAFT TYPE</div>
+                    <div className="text-[10px] text-gray-400 font-bold mb-2">SPACECRAFT TYPE</div>
                     <div className="grid grid-cols-3 gap-2">
                       {spacecraftList.map((st) => {
                         const Icon = SpacecraftTypeIcons[st.id];
@@ -221,7 +227,7 @@ function GameScreen({ user, onLogout }) {
                     </div>
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
-                    <div className="flex-shrink-0 text-[10px] text-gray-400 font-bold mb-2">ADD PARTS · {componentIds.length} selected</div>
+                    <div className="text-[10px] text-gray-400 font-bold mb-2">ADD PARTS · {componentIds.length} selected</div>
                     <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
                       {Object.values(components).map((c) => {
                         const Icon = ProIcons[c.id];
@@ -274,7 +280,7 @@ function GameScreen({ user, onLogout }) {
                 <motion.div key="e" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-3">
                   <div className="text-center mb-4"><h2 className="text-xl font-bold text-space-accent">🌌 Explore Space</h2><p className="text-xs text-gray-400">Real NASA data & 3D solar system</p></div>
                   <motion.button whileTap={{ scale: 0.98 }} onClick={() => { playClick(); setShowExplore(true); }} className="w-full p-5 rounded-2xl border-2 border-space-accent/50 bg-space-accent/10 text-left">
-                    <div className="flex items-center gap-4"><div className="text-5xl">🛰️</div><div className="flex-1"><div className="text-lg font-bold text-space-accent">NASA's Eyes</div><div className="text-xs text-gray-300 mt-1">Explore planets and 170+ spacecraft in real 3D</div><div className="flex-shrink-0 text-[10px] text-space-accent mt-2 font-bold">TAP TO EXPLORE →</div></div></div>
+                    <div className="flex items-center gap-4"><div className="text-5xl">🛰️</div><div className="flex-1"><div className="text-lg font-bold text-space-accent">NASA's Eyes</div><div className="text-xs text-gray-300 mt-1">Explore planets and 170+ spacecraft in real 3D</div><div className="text-[10px] text-space-accent mt-2 font-bold">TAP TO EXPLORE →</div></div></div>
                   </motion.button>
                 </motion.div>
               )}
@@ -287,7 +293,7 @@ function GameScreen({ user, onLogout }) {
             {tabs.map((tab) => (
               <button key={tab.id} onClick={() => { playClick(); setActiveTab(tab.id); }} className={'py-3 flex flex-col items-center gap-1 ' + (activeTab === tab.id ? 'text-space-accent' : 'text-gray-500')}>
                 <span className="text-2xl">{tab.icon}</span>
-                <span className="flex-shrink-0 text-[10px] font-bold">{tab.label}</span>
+                <span className="text-[10px] font-bold">{tab.label}</span>
               </button>
             ))}
           </div>
@@ -323,19 +329,6 @@ function GameScreen({ user, onLogout }) {
         <AnimatePresence>{achievementQueue.length > 0 && (
           <AchievementToast key={achievementQueue[0].id} achievement={achievementQueue[0]} onClose={() => setAchievementQueue((q) => q.slice(1))} />
         )}</AnimatePresence>
-        {showMenu && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-start justify-end p-4" onClick={() => setShowMenu(false)}>
-            <div className="bg-space-900/95 border border-white/20 rounded-2xl p-2 mt-16 w-56 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => { setShowMenu(false); setShowStats(true); }} className="w-full text-left px-4 py-3 text-sm text-space-accent hover:bg-white/5 rounded-lg flex items-center gap-3">📊 Stats</button>
-              <button onClick={() => { setShowMenu(false); setShowAchievements(true); }} className="w-full text-left px-4 py-3 text-sm text-space-warning hover:bg-white/5 rounded-lg flex items-center gap-3">🏆 Achievements</button>
-              <button onClick={() => { setShowMenu(false); setShowLeaderboard(true); }} className="w-full text-left px-4 py-3 text-sm text-space-warning hover:bg-white/5 rounded-lg flex items-center gap-3">🥇 Leaderboard</button>
-              <button onClick={() => { setShowMenu(false); setShowAI(true); }} className="w-full text-left px-4 py-3 text-sm text-space-accent hover:bg-white/5 rounded-lg flex items-center gap-3">🤖 AI Assistant</button>
-              <button onClick={() => { setShowMenu(false); setShowHistory(true); }} className="w-full text-left px-4 py-3 text-sm text-space-accent hover:bg-white/5 rounded-lg flex items-center gap-3">📜 History</button>
-              <div className="border-t border-white/10 my-1"></div>
-              <button onClick={() => { setShowMenu(false); setShowExitMenu(true); }} className="w-full text-left px-4 py-3 text-sm text-gray-400 hover:bg-white/5 rounded-lg flex items-center gap-3">🚪 Exit</button>
-            </div>
-          </div>
-        )}
         {showExitMenu && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { setShowExitMenu(false); setConfirmDelete(false); }}>
             <div className="bg-space-900/95 border border-white/20 rounded-2xl p-5 max-w-xs w-full" onClick={(e) => e.stopPropagation()}>
