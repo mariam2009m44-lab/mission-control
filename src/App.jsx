@@ -170,10 +170,10 @@ function GameScreen({ user, onLogout }) {
             <div className="flex items-center gap-2">
               <span className="text-lg">🚀</span>
               <div>
-                <div className="text-xs font-bold text-space-accent">Mission Control</div>
+                <div className="text-xs font-bold text-space-accent">🚀 {user.username}</div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[8px] px-1.5 py-0.5 bg-space-accent/20 border border-space-accent/40 rounded text-space-accent font-bold">LVL {level}</span>
-                  <div className="w-12 h-1 bg-black/40 rounded-full overflow-hidden"><div className="h-full bg-space-accent" style={{ width: xpInfo.progress + '%' }} /></div>
+                  <div className="w-20 h-1.5 bg-black/40 rounded-full overflow-hidden"><div className="h-full bg-space-accent" style={{ width: xpInfo.progress + '%' }} /></div>
                 </div>
               </div>
             </div>
