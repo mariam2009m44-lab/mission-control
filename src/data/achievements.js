@@ -39,7 +39,7 @@ export const achievements = [
     name: 'Galaxy Explorer',
     icon: '🌌',
     description: 'Visit all 6 celestial bodies',
-    condition: (stats) => stats.visitedPlanets.length >= 6,
+    condition: (stats) => stats.visitedPlanets.length >= 3,
   },
   {
     id: 'heavy_lifter',
