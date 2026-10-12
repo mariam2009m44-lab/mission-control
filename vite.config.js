@@ -7,6 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       includeAssets: ['logo.svg', 'favicon.svg'],
       manifest: {
         name: 'Mission Control',
