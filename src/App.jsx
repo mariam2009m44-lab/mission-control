@@ -340,46 +340,21 @@ function GameScreen({ user, onLogout }) {
         <AnimatePresence>{showJourney && <SpaceJourney rocketId={rocketId} rocketColor="default" objective={objective} onComplete={finishJourney} />}</AnimatePresence>
         <AnimatePresence>{showResult && result && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md z-[90] flex items-center justify-center p-4" onClick={() => setShowResult(false)}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md z-[90] flex items-center justify-center p-4" onClick={() => setShowResult(false)}>
-              <motion.div
-                initial={{ scale: 0.6, y: 40, opacity: 0 }}
-                animate={result.status === 'FAILED' ? { scale: 1, y: 0, opacity: 1, x: [0, -8, 8, -6, 6, 0] } : { scale: 1, y: 0, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                onClick={(e) => e.stopPropagation()}
-                className={`relative bg-space-800/95 border rounded-3xl p-6 max-w-md w-full text-center overflow-hidden ${result.status === 'SUCCESS' ? 'border-space-accent shadow-[0_0_40px_rgba(34,211,238,0.5)]' : result.status === 'PARTIAL' ? 'border-space-warning shadow-[0_0_30px_rgba(251,191,36,0.4)]' : 'border-space-danger shadow-[0_0_30px_rgba(239,68,68,0.4)]'}`}
-              >
-                {result.status === 'SUCCESS' && [...Array(10)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ y: 0, x: 0, opacity: 1, scale: 0 }}
-                    animate={{ y: -150 - Math.random() * 100, x: (Math.random() - 0.5) * 250, opacity: 0, scale: 1 }}
-                    transition={{ duration: 1.5 + Math.random(), delay: i * 0.05, ease: 'easeOut' }}
-                    className="absolute top-1/2 left-1/2 text-xl pointer-events-none z-20"
-                  >
-                    {['✨', '⭐', '🌟', '💫'][i % 4]}
-                  </motion.div>
-                ))}
-                <motion.div
-                  initial={{ scale: 0, rotate: -20 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.15, type: 'spring', stiffness: 300 }}
-                  className="text-7xl mb-3 relative z-10"
-                >
-                  {result.status === 'SUCCESS' ? '🎉' : result.status === 'PARTIAL' ? '⚠️' : '❌'}
-                </motion.div>
-                <h2 className={`text-2xl font-bold mb-2 relative z-10 ${result.status === 'SUCCESS' ? 'text-space-accent' : result.status === 'PARTIAL' ? 'text-space-warning' : 'text-space-danger'}`}>{result.message}</h2>
-                <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: 'spring' }} className="text-gray-400 text-sm mb-4 relative z-10">Score: <span className="text-space-accent font-bold text-xl">{result.score}</span></motion.p>
-                <div className="bg-white/5 rounded-xl p-3 text-left text-xs space-y-1 mb-4 relative z-10">
-                  {result.details?.map((d, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + i * 0.08 }} className="text-gray-300">• {d}</motion.div>
-                  ))}
+            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} onClick={(e) => e.stopPropagation()} className="bg-space-800/95 border border-white/20 rounded-3xl p-6 max-w-md w-full text-center">
+              <div className="text-7xl mb-3">{result.status === 'SUCCESS' ? '🎉' : result.status === 'PARTIAL' ? '📊' : '❌'}</div>
+              <h2 className="text-2xl font-bold text-space-accent mb-2">{result.message}</h2>
+              <p className="text-gray-400 text-sm mb-4">Score: {result.score}</p>
+              <div className="bg-white/5 rounded-xl p-3 text-left text-xs space-y-1 mb-4">
+                {result.details?.map((d, i) => <div key={i} className="text-gray-300">• {d}</div>)}
+              </div>
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => setShowResult(false)} className="flex-1 py-3 bg-space-accent/20 border border-space-accent/40 text-space-accent rounded-xl font-bold text-sm">🔄 AGAIN</button>
+                  <button onClick={() => { setShowResult(false); setActiveTab('mission'); }} className="flex-1 py-3 bg-gradient-to-r from-space-accent to-cyan-400 text-space-900 rounded-xl font-bold text-sm">🎯 NEW MISSION</button>
                 </div>
-                <div className="flex gap-2 mt-2 relative z-10">
-                  <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.03 }} onClick={() => setShowResult(false)} className="flex-1 py-3 bg-space-accent/20 border border-space-accent/40 text-space-accent rounded-xl font-bold text-sm">🔄 AGAIN</motion.button>
-                  <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.03 }} onClick={() => { setShowResult(false); setActiveTab('mission'); }} className="flex-1 py-3 bg-gradient-to-r from-space-accent to-cyan-400 text-space-900 rounded-xl font-bold text-sm">🎯 NEW MISSION</motion.button>
-                </div>
-              </motion.div>
             </motion.div>
+          </motion.div>
+        )}</AnimatePresence>
+        <AnimatePresence>{showHistory && <MissionHistory onClose={() => setShowHistory(false)} />}</AnimatePresence>
         <AnimatePresence>{showLeaderboard && <Leaderboard onClose={() => setShowLeaderboard(false)} currentUser={user.username} />}</AnimatePresence>
         <AnimatePresence>{showAI && <AIAssistant design={design} onClose={() => setShowAI(false)} />}</AnimatePresence>
         <AnimatePresence>{showAchievements && <AchievementsPage unlockedIds={unlockedIds} onClose={() => setShowAchievements(false)} />}</AnimatePresence>
