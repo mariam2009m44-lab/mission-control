@@ -38,14 +38,14 @@ export default function AuthScreen({ onAuth }) {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <motion.div
-            initial={{ scale: 0, rotate: -20 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-            className="text-7xl mb-4"
-          >
-            🚀
-          </motion.div>
+        <motion.img
+          src="/logo.svg"
+          alt="Mission Control"
+          initial={{ scale: 0, rotate: -20 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+          className="w-28 h-28 mx-auto mb-4 drop-shadow-[0_0_30px_rgba(34,211,238,0.5)]"
+        />
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-space-accent via-cyan-300 to-space-accent bg-clip-text text-transparent">
             Mission Control
           </h1>
