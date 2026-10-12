@@ -179,10 +179,10 @@ function GameScreen({ user, onLogout }) {
             </div>
             <div className="flex items-center gap-1.5">
               <button onClick={() => { playClick(); setShowStats(true); }} className="text-[10px] px-2 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg">📊</button>
-              <button onClick={() => { playClick(); setShowAchievements(true); }} className="text-[10px] px-2 py-1 bg-space-warning/20 border border-space-warning/50 text-space-warning rounded-lg">🏅</button>
+              <button onClick={() => { playClick(); setShowAchievements(true); }} className="text-[11px] px-2.5 py-1.5 bg-space-warning/20 border border-space-warning/50 text-space-warning rounded-lg">🏅</button>
               <button onClick={() => { playClick(); setShowLeaderboard(true); }} className="text-[10px] px-2 py-1 bg-yellow-500/20 border border-yellow-400/50 text-yellow-300 rounded-lg">🏆</button>
               <button onClick={() => { playClick(); setShowAI(true); }} className="text-[10px] px-2 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg">🤖</button>
-              <button onClick={() => { playClick(); setShowHistory(true); }} className="text-[10px] px-2 py-1 bg-space-accent/20 border border-space-accent/50 text-space-accent rounded-lg">📜</button>
+              <button onClick={() => { playClick(); setShowHistory(true); }} className="text-[11px] px-2.5 py-1.5 bg-space-accent/20 border border-space-accent/50 text-space-accent rounded-lg">📜</button>
               <button onClick={onLogout} className="text-[10px] px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-gray-400">Exit</button>
             </div>
           </div>
@@ -226,7 +226,7 @@ function GameScreen({ user, onLogout }) {
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
                     <div className="text-[10px] text-gray-400 font-bold mb-2">ADD PARTS · {componentIds.length} selected</div>
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
                       {Object.values(components).map((c) => {
                         const Icon = ProIcons[c.id];
                         const selected = componentIds.includes(c.id);
