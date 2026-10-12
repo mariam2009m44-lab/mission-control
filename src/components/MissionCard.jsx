@@ -8,12 +8,15 @@ export default function MissionCard({ objective, selected, onClick }) {
 
   return (
     <motion.button
-      whileTap={{ scale: 0.98 }}
+    <motion.button
+      whileHover={{ scale: 1.02, y: -6 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       onClick={onClick}
-      className={`w-full rounded-2xl border-2 overflow-hidden text-left transition-all relative ${
+      className={`w-full rounded-2xl border-2 overflow-hidden text-left relative ${
         selected
-          ? 'border-space-accent shadow-lg shadow-space-accent/30'
-          : 'border-white/10'
+          ? 'border-space-accent shadow-lg shadow-space-accent/50'
+          : 'border-white/10 hover:border-space-accent/40'
       }`}
     >
       {/* Image */}
