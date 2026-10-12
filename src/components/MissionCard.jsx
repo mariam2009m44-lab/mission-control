@@ -8,7 +8,6 @@ export default function MissionCard({ objective, selected, onClick }) {
 
   return (
     <motion.button
-    <motion.button
       whileHover={{ scale: 1.02, y: -6 }}
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
