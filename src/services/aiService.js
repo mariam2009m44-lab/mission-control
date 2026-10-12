@@ -1,27 +1,18 @@
-export async function getAIResponse(userMessage, missionContext) {
+export async function getAIResponse(chatHistory) {
   try {
     const response = await fetch("https://text.pollinations.ai/", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         messages: [
-          { 
-            role: "system", 
-            content: "أنت مساعد مهام فضائية ذكي في لعبة Mission Control. ساعد اللاعب في تصميم مهامه. كن موجزاً ومهنياً." 
-          },
-          { 
-            role: "user", 
-            content: `سياق المهمة: ${JSON.stringify(missionContext)}\n\nسؤال اللاعب: ${userMessage}` 
-          }
+          { role: "system", content: "أنت مساعد مهام فضائية ذكي وودود في لعبة Mission Control. ساعد اللاعب في تصميم مهامه. كن تفاعلياً وأجب على أسئلته بوضوح." },
+          ...chatHistory
         ],
         model: "openai"
       })
     });
 
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    
     const data = await response.json();
     
     if (data.choices && data.choices[0]) {
