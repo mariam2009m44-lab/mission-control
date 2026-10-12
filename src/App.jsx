@@ -228,15 +228,25 @@ function GameScreen({ user, onLogout }) {
                         const selected = componentIds.includes(c.id);
                         return (
                           <div key={c.id} className={'relative p-2 rounded-xl border-2 text-center cursor-pointer transition-all ' + (selected ? 'bg-space-accent/20 border-space-accent shadow-lg shadow-space-accent/30' : 'bg-white/5 border-white/10 hover:border-space-accent/40')}>
-                            <button onClick={(e) => { e.stopPropagation(); setInfoComponent(c.id); }} className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-space-accent/40 text-space-accent text-[8px] font-bold leading-none flex items-center justify-center">i</button>
-                            <div onClick={() => toggleComponent(c.id)}>
-                              <div className={'flex justify-center transition-all ' + (selected ? 'drop-shadow-[0_0_8px_rgba(0,212,255,0.8)]' : '')}>{Icon ? <Icon size={26} className={selected ? 'text-space-accent' : 'text-gray-300'} /> : <span className="text-2xl">{c.icon}</span>}</div>
-                              <div className={'text-[9px] mt-1 font-bold leading-tight ' + (selected ? 'text-space-accent' : 'text-gray-400')}>{c.name.split(' ')[0]}</div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                  <motion.div
+                    key={c.id}
+                    whileHover={{ scale: 1.08, y: -3 }}
+                    whileTap={{ scale: 0.92 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                    className={`relative p-2 rounded-xl border-2 text-center cursor-pointer transition-all ${selected ? 'bg-space-accent/20 border-space-accent shadow-[0_0_15px_rgba(34,211,238,0.6)]' : 'bg-white/5 border-white/10 hover:border-space-accent/40'}`}
+                  >
+                    <button onClick={(e) => { e.stopPropagation(); setInfoComponent(c.id); }} className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-space-accent/40 text-space-accent text-[8px] font-bold leading-none flex items-center justify-center">i</button>
+                    <div onClick={() => toggleComponent(c.id)}>
+                      <motion.div
+                        animate={selected ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : { scale: 1, rotate: 0 }}
+                        transition={selected ? { duration: 0.5, ease: 'easeOut' } : {}}
+                        className={`flex justify-center ${selected ? 'drop-shadow-[0_0_12px_rgba(34,211,238,1)]' : ''}`}
+                      >
+                        <Icon size={28} className={selected ? 'text-space-accent' : 'text-gray-400'} />
+                      </motion.div>
+                      <div className={`text-[9px] mt-1 font-bold leading-tight ${selected ? 'text-space-accent' : 'text-gray-400'}`}>{c.name.split(' ')[0]}</div>
                     </div>
+                  </motion.div>
                   </div>
                   {validation.errors.length > 0 && (<div className="p-3 rounded-xl bg-space-danger/10 border border-space-danger/30 text-[10px] text-space-danger space-y-1">{validation.errors.map((e, i) => <div key={i}>⚠ {e}</div>)}</div>)}
                 </motion.div>
