@@ -309,7 +309,10 @@ function GameScreen({ user, onLogout }) {
               <div className="bg-white/5 rounded-xl p-3 text-left text-xs space-y-1 mb-4">
                 {result.details?.map((d, i) => <div key={i} className="text-gray-300">• {d}</div>)}
               </div>
-              <button onClick={() => setShowResult(false)} className="w-full py-3 bg-gradient-to-r from-space-accent to-cyan-400 text-space-900 rounded-xl font-bold">🔄 PLAY AGAIN</button>
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => setShowResult(false)} className="flex-1 py-3 bg-space-accent/20 border border-space-accent/40 text-space-accent rounded-xl font-bold text-sm">🔄 AGAIN</button>
+                  <button onClick={() => { setShowResult(false); setActiveTab('mission'); }} className="flex-1 py-3 bg-gradient-to-r from-space-accent to-cyan-400 text-space-900 rounded-xl font-bold text-sm">🎯 NEW MISSION</button>
+                </div>
             </motion.div>
           </motion.div>
         )}</AnimatePresence>
