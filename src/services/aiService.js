@@ -1,14 +1,14 @@
 export async function getAIResponse(chatHistory) {
   try {
-    const response = await fetch("https://corsproxy.io/?https://text.pollinations.ai/", {
+    const response = await fetch("https://text.pollinations.ai/openai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        model: "openai",
         messages: [
           { role: "system", content: "أنت مساعد مهام فضائية ذكي وودود في لعبة Mission Control. ساعد اللاعب في تصميم مهامه. كن تفاعلياً وأجب على أسئلته بوضوح." },
           ...chatHistory
-        ],
-        model: "openai"
+        ]
       })
     });
 
