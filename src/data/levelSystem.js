@@ -28,5 +28,5 @@ export const awardXP = (mission, status) => {
   if (mission.score > 150) xp += 100;
   return xp;
 };
-export const unlocksByLevel = { 0: ['scout', 'science', 'hauler'] };
-export const getUnlockedTypes = (level) => ['scout', 'science', 'hauler'];
+export const unlocksByLevel = { 0: ['scout'], 1: ['science'], 2: ['hauler'] };
+export const getUnlockedTypes = (level) => Array.from({length: level+1}, (_,i) => unlocksByLevel[i] || []).flat();
