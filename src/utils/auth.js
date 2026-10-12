@@ -13,23 +13,11 @@ const saveUsers = (users) => {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 };
 
-const hashPassword = (password) => {
-  let hash = 5381;
-  const salted = 'mc_salt_' + password;
-  for (let i = 0; i < salted.length; i++) {
-    hash = ((hash << 5) + hash + salted.charCodeAt(i)) >>> 0;
-  }
-  return 'h' + hash.toString(36);
-};
-
-const normalize = (username) => (username || '').trim().toLowerCase();
-
 export const register = (username, password) => {
-  const name = normalize(username);
-  if (!name || !password) {
+  if (!username || !password) {
     return { success: false, error: 'Username and password required' };
   }
-  if (name.length < 3) {
+  if (username.length < 3) {
     return { success: false, error: 'Username must be at least 3 characters' };
   }
   if (password.length < 4) {
@@ -37,43 +25,33 @@ export const register = (username, password) => {
   }
 
   const users = getUsers();
-  if (users[name]) {
+  if (users[username]) {
     return { success: false, error: 'Username already exists' };
   }
 
-  users[name] = {
-    username: name,
-    passwordHash: hashPassword(password),
+  users[username] = {
+    username,
+    password,
     createdAt: new Date().toISOString(),
     missions: [],
     achievements: [],
   };
   saveUsers(users);
 
-  localStorage.setItem(SESSION_KEY, name);
-  return { success: true, user: users[name] };
+  // Auto login
+  localStorage.setItem(SESSION_KEY, username);
+  return { success: true, user: users[username] };
 };
 
 export const login = (username, password) => {
   const users = getUsers();
-  const user = users[normalize(username)];
+  const user = users[username];
 
-    (plain text)
-  const validOld = user && user.password === password;
-  const validNew = user && user.passwordHash === hashPassword(password);
-
-  if (!user || (!validOld && !validNew)) {
+  if (!user || user.password !== password) {
     return { success: false, error: 'Invalid username or password' };
   }
 
-  
-  if (validOld && !user.passwordHash) {
-    user.passwordHash = hashPassword(password);
-    delete user.password;
-    saveUsers(users);
-  }
-
-  localStorage.setItem(SESSION_KEY, user.username);
+  localStorage.setItem(SESSION_KEY, username);
   return { success: true, user };
 };
 
