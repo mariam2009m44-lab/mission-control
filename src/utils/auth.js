@@ -79,7 +79,7 @@ export const saveMission = (mission) => {
     ...mission,
   };
 
-  users[username].missions = [newMission, ...(users[username].missions || [])].slice(0, 20);
+  users[username].missions = [newMission, ...(users[username].missions || [])].slice(0, 100);
   saveUsers(users);
   return { success: true, mission: newMission };
 };
@@ -98,4 +98,15 @@ export const deleteMission = (id) => {
 
   users[username].missions = (users[username].missions || []).filter((m) => m.id !== id);
   saveUsers(users);
+};
+
+export const deleteUser = () => {
+  const username = localStorage.getItem(SESSION_KEY);
+  if (!username) return { success: false, error: 'Not logged in' };
+  const users = getUsers();
+  if (!users[username]) return { success: false, error: 'User not found' };
+  delete users[username];
+  saveUsers(users);
+  localStorage.removeItem(SESSION_KEY);
+  return { success: true };
 };
