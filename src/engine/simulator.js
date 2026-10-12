@@ -3,13 +3,8 @@ import { getRocket } from '../data/rockets';
 import { getObjective } from '../data/objectives';
 
 export const calculateMetrics = (design) => {
-  let mass = 0;
-  let cost = 0;
-  let power = 0;
-  let science = 0;
-  let communication = 0;
-  let protection = 0;
-  let mobility = 0;
+  let mass = 0, cost = 0, power = 0, science = 0;
+  let communication = 0, protection = 0, mobility = 0;
 
   design.componentIds.forEach((id) => {
     const c = components[id];
@@ -26,16 +21,7 @@ export const calculateMetrics = (design) => {
   const rocket = getRocket(design.rocketId);
   const totalCost = cost + (rocket ? rocket.cost : 0);
 
-  return {
-    mass,
-    cost: totalCost,
-    power,
-    science,
-    communication,
-    protection,
-    mobility,
-    rocket,
-  };
+  return { mass, cost: totalCost, power, science, communication, protection, mobility, rocket };
 };
 
 export const validateDesign = (metrics, design) => {
@@ -43,9 +29,7 @@ export const validateDesign = (metrics, design) => {
   const warnings = [];
 
   if (metrics.rocket && metrics.mass > metrics.rocket.maxPayload) {
-    errors.push(
-      `Mass (${metrics.mass}kg) exceeds rocket capacity (${metrics.rocket.maxPayload}kg)`
-    );
+    errors.push(`Mass (${metrics.mass}kg) exceeds rocket capacity (${metrics.rocket.maxPayload}kg)`);
   }
 
   if (metrics.power < 0) {
@@ -59,31 +43,44 @@ export const validateDesign = (metrics, design) => {
   }
 
   const objective = getObjective(design.objectiveId);
-  if (objective && metrics.science < objective.scienceTarget) {
-    warnings.push(
-      `Science target low: ${metrics.science}/${objective.scienceTarget}`
-    );
+  if (objective) {
+    if (metrics.science < objective.scienceTarget) {
+      warnings.push(`Science target low: ${metrics.science}/${objective.scienceTarget}`);
+    }
+    
+    if (objective.minBudget && metrics.cost < objective.minBudget) {
+      warnings.push(`Budget tight for ${objective.name}: $${metrics.cost}M (recommended $${objective.minBudget}M+)`);
+    }
+    
+    if (objective.id === 'mars' && metrics.protection < 50) {
+      warnings.push('Mars entry needs a Heat Shield (protection ≥ 50)');
+    }
   }
 
   return { errors, warnings, isValid: errors.length === 0 };
 };
 
-export const simulateLaunch = (metrics, design) => {
+
+export const simulateLaunch = (metrics, design, eventBonus = 0) => {
   const validation = validateDesign(metrics, design);
 
   if (!validation.isValid) {
     return {
       status: 'FAILED',
       score: 0,
+      finalScience: metrics.science,
       message: 'Design failed pre-launch validation',
       details: validation.errors,
     };
   }
 
+  const finalScience = Math.max(0, metrics.science + eventBonus);
+
   let score = 0;
-  score += metrics.science * 2;
+  score += finalScience * 2;
   score += metrics.communication * 0.5;
   score += Math.min(metrics.power, 200) * 0.3;
+  score += metrics.protection * 0.2;
   score -= metrics.cost * 0.5;
 
   const reliability = metrics.rocket?.reliability || 0.9;
@@ -104,14 +101,13 @@ export const simulateLaunch = (metrics, design) => {
   return {
     status,
     score: Math.round(score),
+    finalScience,
     message:
-      status === 'SUCCESS'
-        ? '🎉 Mission accomplished!'
-        : status === 'PARTIAL'
-        ? '📊 Partial success'
-        : '❌ Mission failed',
+      status === 'SUCCESS' ? '🎉 Mission accomplished!'
+      : status === 'PARTIAL' ? '📊 Partial success'
+      : '❌ Mission failed',
     details: [
-      `Science: ${metrics.science}`,
+      `Science: ${finalScience}${eventBonus ? ` (event ${eventBonus > 0 ? '+' : ''}${eventBonus})` : ''}`,
       `Communication: ${metrics.communication}`,
       `Power margin: ${metrics.power}W`,
       `Cost: $${metrics.cost}M`,
