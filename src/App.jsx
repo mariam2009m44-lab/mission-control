@@ -245,6 +245,11 @@ function GameScreen({ user, onLogout }) {
                   {validation.errors.length > 0 && (<div className="p-3 rounded-xl bg-space-danger/10 border border-space-danger/30 text-[10px] text-space-danger space-y-1">{validation.errors.map((e, i) => <div key={i}>⚠ {e}</div>)}</div>)}
                 </motion.div>
               )}
+                {validation.warnings.length > 0 && (
+                  <div className="p-3 mt-2 rounded-xl bg-space-warning/10 border border-space-warning/30 text-[10px] text-space-warning space-y-1">
+                    {validation.warnings.map((w, i) => <div key={i}>⚠️ {w}</div>)}
+                  </div>
+                )}
               {activeTab === 'launch' && (
                 <motion.div key="l" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-3">
                   <div className="text-center mb-4"><h2 className="text-xl font-bold text-space-warning">🚀 Select Launcher</h2><p className="text-xs text-gray-400">Choose a rocket for your spacecraft</p></div>
