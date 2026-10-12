@@ -4,7 +4,7 @@ import { objectives } from './data/objectives';
 import { components } from './data/spacecraft';
 import { rockets } from './data/rockets';
 import { calculateMetrics, validateDesign, simulateLaunch } from './engine/simulator';
-import { getCurrentUser, logout, saveMission, getMissions } from './utils/auth';
+import { getCurrentUser, logout, saveMission, getMissions, deleteUser } from './utils/auth';
 import { spacecraftList } from './data/spacecraftTypes';
 import { calculateLevel, getUnlockedTypes, xpProgress, awardXP } from './data/levelSystem';
 import { checkNewAchievements } from './data/achievements';
@@ -69,6 +69,8 @@ function GameScreen({ user, onLogout }) {
   const [showJourney, setShowJourney] = useState(false);
   const [infoComponent, setInfoComponent] = useState(null);
   const [musicOn, setMusicOn] = useState(false);
+  const [showExitMenu, setShowExitMenu] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const xpKey = `mc_xp_${user.username}`;
   const achKey = `mc_achievements_${user.username}`;
@@ -183,7 +185,7 @@ function GameScreen({ user, onLogout }) {
               <button onClick={() => { playClick(); setShowLeaderboard(true); }} className="text-[10px] px-2 py-1 bg-yellow-500/20 border border-yellow-400/50 text-yellow-300 rounded-lg">🏆</button>
               <button onClick={() => { playClick(); setShowAI(true); }} className="text-[10px] px-2 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 rounded-lg">🤖</button>
               <button onClick={() => { playClick(); setShowHistory(true); }} className="text-[11px] px-2.5 py-1.5 bg-space-accent/20 border border-space-accent/50 text-space-accent rounded-lg">📜</button>
-              <button onClick={onLogout} className="text-[10px] px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-gray-400">Exit</button>
+              <button onClick={() => setShowExitMenu(true)} className="text-[10px] px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-gray-400">Exit</button>
             </div>
           </div>
         </div>
